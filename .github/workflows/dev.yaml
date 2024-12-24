@@ -17,5 +17,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           script: |
             cd AutoTrading
-            git pull https://github.com/consoleolog/AutoTrading.git 
+            git pull https://github.com/consoleolog/AutoTrading.git production
             sudo docker build -t upbit_trading:v1 .
