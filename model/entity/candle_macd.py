@@ -11,9 +11,9 @@ class CandleMACD:
         up_signal: float = None,
         mid_signal: float = None,
         low_signal: float = None,
-        up_slope: float = None,
-        mid_slope: float = None,
-        low_slope: float = None,
+        up_gradient: float = None,
+        mid_gradient: float = None,
+        low_gradient: float = None,
     ):
         self.candle_id = candle_id
         self.up = up
@@ -22,9 +22,9 @@ class CandleMACD:
         self.up_signal = up_signal
         self.mid_signal = mid_signal
         self.low_signal = low_signal
-        self.up_slope = up_slope
-        self.mid_slope = mid_slope
-        self.low_slope = low_slope
+        self.up_gradient = up_gradient
+        self.mid_gradient = mid_gradient
+        self.low_gradient = low_gradient
 
     @staticmethod
     def of(candle_id, df):
@@ -36,9 +36,9 @@ class CandleMACD:
             up_signal=float(df[MACD.UP_SIGNAL].iloc[-1]),
             mid_signal=float(df[MACD.MID_SIGNAL].iloc[-1]),
             low_signal=float(df[MACD.LOW_SIGNAL].iloc[-1]),
-            up_slope=float(df[MACD.UP_SLOPE].iloc[-1]),
-            mid_slope=float(df[MACD.MID_SLOPE].iloc[-1]),
-            low_slope=float(df[MACD.LOW_SLOPE].iloc[-1]),
+            up_gradient=float(df[MACD.UP_GRADIENT].iloc[-1]),
+            mid_gradient=float(df[MACD.MID_GRADIENT].iloc[-1]),
+            low_gradient=float(df[MACD.LOW_GRADIENT].iloc[-1]),
         )
 
     def __str__(self):
@@ -51,7 +51,7 @@ class CandleMACD:
             up_signal={self.up_signal},
             mid_signal={self.mid_signal},
             low_signal={self.low_signal},
-            up_slope={self.up_slope},
-            mid_slope={self.mid_slope},
-            low_slope={self.low_slope},
+            up_gradient={self.up_gradient},
+            mid_gradient={self.mid_gradient},
+            low_gradient={self.low_gradient},
         )"""
