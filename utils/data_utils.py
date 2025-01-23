@@ -5,6 +5,8 @@ from model.const.stage import Stage
 from model.dto.ema import EMA
 from model.dto.histogram import Histogram
 from model.dto.macd import MACD
+from utils.exception.data_exception import DataException
+from utils.exception.error_response import ErrorResponse
 
 def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, long_period:int=60):
     data[EMA.SHORT] = EMA(data, short_period).val
@@ -36,8 +38,47 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
 def select_mode(data:DataFrame) -> tuple[str, Stage]:
     stage = EMA.get_stage(data)
     if stage == Stage.STABLE_INCREASE or stage == Stage.END_OF_INCREASE or stage == Stage.START_OF_DECREASE:
-        return "buy", stage
-    elif stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
         return "sell", stage
+    elif stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
+        return "buy", stage
 
 
+def peekout(data: DataFrame, mode:str)->bool:
+    up_hist, mid_hist, low_hist = data[Histogram.UP], data[Histogram.MID], data[Histogram.LOW]
+    if mode == "buy":
+        return all([up_hist.iloc[-1] < 0, mid_hist.iloc[-1] < 0, low_hist.iloc[-1] < 0,
+                    up_hist.min() < 0, mid_hist.min() < 0, low_hist.min() < 0,
+                    up_hist.iloc[-1] > up_hist.min(),
+                    mid_hist.iloc[-1] > mid_hist.min(),
+                    low_hist.iloc[-1] > low_hist.min()])
+    elif mode == "sell":
+        return all([up_hist.iloc[-1] > 0, mid_hist.iloc[-1] > 0, low_hist.iloc[-1] > 0,
+                    up_hist.min() > 0, mid_hist.min() > 0, low_hist.min() > 0,
+                    up_hist.iloc[-1] < up_hist.max(),
+                    mid_hist.iloc[-1] < mid_hist.max(),
+                    low_hist.iloc[-1] < low_hist.max()])
+    else:
+        error = ErrorResponse("BAD_REQUEST", 400, "UnExcepted Data")
+        raise DataException(error)
+
+def cross_signal(data: DataFrame) -> bool:
+    up, mid, low = data[MACD.UP], data[MACD.MID], data[MACD.LOW]
+    up_signal, mid_signal, low_signal = data[MACD.UP_SIGNAL], data[MACD.MID_SIGNAL], data[MACD.LOW_SIGNAL]
+
+    before = up.iloc[-1] > up_signal.iloc[-1]
+    after = up.iloc[-2] > up_signal.iloc[-1]
+    if before != after:
+        return True
+    else:
+        return False
+
+def increase(data: DataFrame) -> bool:
+    up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
+    return all([up_gradient.iloc[-1] > 0, mid_gradient.iloc[-1] > 0, low_gradient.iloc[-1] > 0,
+                up_gradient > mid_gradient > low_gradient])
+
+def decrease(data: DataFrame) -> bool:
+    up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
+    return all([up_gradient.iloc[-1]  < up_gradient.iloc[-2],
+                mid_gradient.iloc[-1] <  mid_gradient.iloc[-2],
+                low_gradient.iloc[-1] <  low_gradient.iloc[-2]])

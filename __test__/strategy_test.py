@@ -84,7 +84,10 @@ class StrategyTest(unittest.TestCase):
         MACD Low Histogram : {data[Histogram.LOW].iloc[-2]}
         MACD Low Gradient  : {data[MACD.LOW_GRADIENT].iloc[-2]}
         """)
-        plot_create_sub_data(data)
+
+        mode, stage = data_utils.select_mode(data)
+        self.logger.debug(mode)
+        self.logger.debug(stage)
 
     def test_calculate_slope(self):
         ticker = "ETH/KRW"
