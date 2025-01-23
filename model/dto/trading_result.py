@@ -5,9 +5,9 @@ class TradingResult:
         self.mode = trading_result['mode']
         self.peekout = trading_result['peekout']
         self.cross_signal = trading_result['cross_signal']
-        if trading_result['increase'] is not None:
+        if self.mode == "buy":
             self.increase = trading_result['increase']
-        if trading_result['decrease'] is not None:
+        if self.mode == "sell":
             self.decrease = trading_result['decrease']
 
     def __str__(self):
