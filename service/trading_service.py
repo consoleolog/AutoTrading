@@ -52,7 +52,7 @@ class TradingService:
         pool.close()
         pool.join()
         for result in results:
-            self.logger.info(result.__str__)
+            self.logger.info(result.__str__())
 
     def auto_trading(self, ticker:str, timeframe: TimeFrame):
         result = {"ticker": ticker}
