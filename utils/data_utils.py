@@ -69,8 +69,9 @@ def cross_signal(data: DataFrame) -> bool:
 
 def increase(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
-    return all([up_gradient.iloc[-1] > 0, mid_gradient.iloc[-1] > 0, low_gradient.iloc[-1] > 0,
-                up_gradient.iloc[-1] > mid_gradient.iloc[-1] > low_gradient.iloc[-1]])
+    return all([up_gradient.iloc[-1] > mid_gradient.iloc[-1],
+                mid_gradient.iloc[-1] > low_gradient.iloc[-1],
+                low_gradient.iloc[-1] > 0])
 
 def decrease(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
