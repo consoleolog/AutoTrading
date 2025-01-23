@@ -4,7 +4,6 @@ class TradingResult:
         self.ticker = trading_result['ticker']
         self.mode = trading_result['mode']
         self.peekout = trading_result['peekout']
-        self.cross_signal = trading_result['cross_signal']
         if self.mode == "buy":
             self.increase = trading_result['increase']
         if self.mode == "sell":
@@ -18,6 +17,5 @@ class TradingResult:
         peekout: {self.peekout},
         increase: {self.increase},
         decrease: {self.decrease}
-        cross_signal: {self.cross_signal},
         )
         """
