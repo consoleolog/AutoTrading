@@ -48,10 +48,11 @@ class TradingService:
 
     def start_trading(self, timeframe: TimeFrame):
         pool = ThreadPool(4)
-        result = pool.map(lambda ticker: self.auto_trading(ticker, timeframe), self.ticker_list)
+        results = pool.map(lambda ticker: self.auto_trading(ticker, timeframe), self.ticker_list)
         pool.close()
         pool.join()
-        self.logger.info(result)
+        for result in results:
+            self.logger.info(result.__str__)
 
     def auto_trading(self, ticker:str, timeframe: TimeFrame):
         result = {"ticker": ticker}
