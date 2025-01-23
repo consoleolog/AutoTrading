@@ -1,15 +1,13 @@
 import uuid
 from datetime import datetime
-
-import psycopg2
 from pandas import DataFrame
 from logger import LoggerFactory
 from multiprocessing.dummy import Pool as ThreadPool
-
 from model.const.stage import Stage
 from model.const.timeframe import TimeFrame
 from model.dto.ema import EMA
 from model.dto.macd import MACD
+from model.dto.trading_result import TradingResult
 from model.entity.candle import Candle
 from model.entity.candle_ema import CandleEMA
 from model.entity.candle_macd import CandleMACD
@@ -56,25 +54,42 @@ class TradingService:
         self.logger.info(result)
 
     def auto_trading(self, ticker:str, timeframe: TimeFrame):
+        result = {"ticker": ticker}
         candles = exchange_utils.get_candles(ticker, timeframe)
         data = data_utils.create_sub_data(candles)
         mode, stage = data_utils.select_mode(data)
+        result["mode"] = mode
+        result["stage"] = stage
 
         self.save_data(ticker, timeframe, data, stage)
 
         krw = exchange_utils.get_krw()
         balance = exchange_utils.get_balance(ticker)
         try:
-            if mode == "buy" and data_utils.peekout(data, mode) and data_utils.cross_signal(data) and data_utils.increase(data):
-                self._print_trading_report(ticker, data)
-                if krw > 8000 and balance == 0:
-                    return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
+            if mode == "buy":
+                peekout = data_utils.peekout(data, mode)
+                cross_signal = data_utils.cross_signal(data)
+                increase = data_utils.increase(data)
+                result["peekout"] = peekout
+                result["cross_signal"] = cross_signal
+                result["increase"] = increase
+                if peekout and cross_signal and increase:
+                    self._print_trading_report(ticker, data)
+                    if krw > 8000 and balance == 0:
+                        return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
 
-            elif mode == "sell" and data_utils.peekout(data, mode) and data_utils.cross_signal(data) and data_utils.decrease(data):
-                self._print_trading_report(ticker, data)
-                if balance != 0:
-                    return exchange_utils.create_sell_order(ticker, balance)
-            return "success"
+            elif mode == "sell":
+                peekout = data_utils.peekout(data, mode)
+                cross_signal = data_utils.cross_signal(data)
+                decrease = data_utils.decrease(data)
+                result["peekout"] = peekout
+                result["cross_signal"] = cross_signal
+                result["decrease"] = decrease
+                if peekout and cross_signal and decrease:
+                    self._print_trading_report(ticker, data)
+                    if balance != 0:
+                        return exchange_utils.create_sell_order(ticker, balance)
+            return TradingResult(result)
         except DataException:
             return "error"
 

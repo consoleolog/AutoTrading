@@ -65,7 +65,7 @@ def cross_signal(data: DataFrame) -> bool:
     up_signal, mid_signal, low_signal = data[MACD.UP_SIGNAL], data[MACD.MID_SIGNAL], data[MACD.LOW_SIGNAL]
 
     before = up.iloc[-1] > up_signal.iloc[-1]
-    after = up.iloc[-2] > up_signal.iloc[-1]
+    after = up.iloc[-2] > up_signal.iloc[-2]
     if before != after:
         return True
     else:
