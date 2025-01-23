@@ -3,7 +3,6 @@ from pandas import DataFrame
 
 from model.const.stage import Stage
 from model.dto.ema import EMA
-from model.dto.histogram import Histogram
 from model.dto.macd import MACD
 from utils.exception.data_exception import DataException
 from utils.exception.error_response import ErrorResponse
@@ -29,9 +28,9 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
     data[MACD.MID_GRADIENT] = np.gradient(MidMACD.val)
     data[MACD.LOW_GRADIENT] = np.gradient(LowMACD.val)
 
-    data[Histogram.UP] = ShortMACD.val - ShortMACD.signal_val
-    data[Histogram.MID] = MidMACD.val - MidMACD.signal_val
-    data[Histogram.LOW] = LowMACD.val - LowMACD.signal_val
+    data[MACD.UP_HISTOGRAM] = ShortMACD.histogram_val
+    data[MACD.MID_HISTOGRAM] = MidMACD.histogram_val
+    data[MACD.LOW_HISTOGRAM] = LowMACD.histogram_val
 
     return data
 
@@ -44,7 +43,7 @@ def select_mode(data:DataFrame) -> tuple[str, Stage]:
 
 
 def peekout(data: DataFrame, mode:str)->bool:
-    up_hist, mid_hist, low_hist = data[Histogram.UP], data[Histogram.MID], data[Histogram.LOW]
+    up_hist, mid_hist, low_hist = data[MACD.UP_HISTOGRAM], data[MACD.MID_HISTOGRAM], data[MACD.LOW_HISTOGRAM]
     if mode == "buy":
         return all([up_hist.iloc[-1] < 0, mid_hist.iloc[-1] < 0, low_hist.iloc[-1] < 0,
                     up_hist.min() < 0, mid_hist.min() < 0, low_hist.min() < 0,

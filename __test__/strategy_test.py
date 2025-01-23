@@ -7,7 +7,6 @@ from scipy.optimize import curve_fit
 from logger import LoggerFactory
 from model.const.timeframe import TimeFrame
 from model.dto.ema import EMA
-from model.dto.histogram import Histogram
 from model.dto.macd import MACD
 from utils import exchange_utils, data_utils
 import matplotlib.pyplot as plt
@@ -27,7 +26,7 @@ def plot_create_sub_data(data):
     # MACD 그래프
     axes[1].plot(data[MACD.UP], label="MACD Up", color="blue")
     axes[1].plot(data[MACD.UP_SIGNAL], label="MACD Up Signal", color="orange")
-    axes[1].bar(data.index, data[Histogram.UP], label="MACD Up Histogram", color="gray", alpha=0.5)
+    axes[1].bar(data.index, data[MACD.UP_HISTOGRAM], label="MACD Up Histogram", color="gray", alpha=0.5)
     axes[1].set_title("MACD Up")
     axes[1].legend()
     axes[1].grid(True)
@@ -35,11 +34,11 @@ def plot_create_sub_data(data):
     # MACD Mid, Low 그래프
     axes[2].plot(data[MACD.MID], label="MACD Mid", color="blue")
     axes[2].plot(data[MACD.MID_SIGNAL], label="MACD Mid Signal", color="orange")
-    axes[2].bar(data.index, data[Histogram.MID], label="MACD Mid Histogram", color="gray", alpha=0.5)
+    axes[2].bar(data.index, data[MACD.MID_HISTOGRAM], label="MACD Mid Histogram", color="gray", alpha=0.5)
 
     axes[2].plot(data[MACD.LOW], label="MACD Low", color="green")
     axes[2].plot(data[MACD.LOW_SIGNAL], label="MACD Low Signal", color="red")
-    axes[2].bar(data.index, data[Histogram.LOW], label="MACD Low Histogram", color="purple", alpha=0.5)
+    axes[2].bar(data.index, data[MACD.LOW_HISTOGRAM], label="MACD Low Histogram", color="purple", alpha=0.5)
     axes[2].set_title("MACD Mid & Low")
     axes[2].legend()
     axes[2].grid(True)
@@ -71,17 +70,17 @@ class StrategyTest(unittest.TestCase):
         
         MACD Up            : {data[MACD.UP].iloc[-2]}
         MACD Up  Signal    : {data[MACD.UP_SIGNAL].iloc[-2]}
-        MACD Up  Histogram : {data[Histogram.UP].iloc[-2]}
+        MACD Up  Histogram : {data[MACD.UP_HISTOGRAM].iloc[-2]}
         MACD Up  Gradient  : {data[MACD.UP_GRADIENT].iloc[-2]}
         
         MACD Mid           : {data[MACD.MID].iloc[-2]}
         MACD Mid Signal    : {data[MACD.MID_SIGNAL].iloc[-2]}
-        MACD Mid Histogram : {data[Histogram.MID].iloc[-2]}
+        MACD Mid Histogram : {data[MACD.MID_HISTOGRAM].iloc[-2]}
         MACD Mid Gradient  : {data[MACD.MID_GRADIENT].iloc[-2]}
         
         MACD Low           : {data[MACD.LOW].iloc[-2]}
         MACD Low Signal    : {data[MACD.LOW_SIGNAL].iloc[-2]}
-        MACD Low Histogram : {data[Histogram.LOW].iloc[-2]}
+        MACD Low Histogram : {data[MACD.LOW_HISTOGRAM].iloc[-2]}
         MACD Low Gradient  : {data[MACD.LOW_GRADIENT].iloc[-2]}
         """)
 
@@ -121,26 +120,26 @@ class StrategyTest(unittest.TestCase):
         self.logger.debug(f"현재 시간: {current_time}")
         self.logger.debug(f"5분 전 시간: {five_minutes_ago}")
 
-    def test_curve_fit(self):
-        current_time = time.time()
-        ticker = "BTC/KRW"
-        candles = exchange_utils.get_candles(ticker, TimeFrame.MINUTE_5)
-        data = data_utils.create_sub_data(candles)
-
-        def fnc(x, a, b, c):
-            return a*x + b*x**2 + c
-        opt, cov = curve_fit(fnc, data[MACD.UP].iloc[-3:], [300000000 * 3, 300000000 * 2, 300000000])
-        self.logger.debug(opt)
-        self.logger.debug(cov)
-        a, b, c = opt
-        self.logger.debug(f"a : {a}")
-        self.logger.debug(f"b : {b}")
-        self.logger.debug(f"c : {c}")
-
-
-        x = np.array([300000000 * 3, 300000000 * 2, 300000000])
-        plt.plot(x, fnc(x, a, b, c))
-        plt.show()
+    # def test_curve_fit(self):
+    #     current_time = time.time()
+    #     ticker = "BTC/KRW"
+    #     candles = exchange_utils.get_candles(ticker, TimeFrame.MINUTE_5)
+    #     data = data_utils.create_sub_data(candles)
+    #
+    #     def fnc(x, a, b, c):
+    #         return a*x + b*x**2 + c
+    #     opt, cov = curve_fit(fnc, data[MACD.UP].iloc[-3:], [300000000 * 3, 300000000 * 2, 300000000])
+    #     self.logger.debug(opt)
+    #     self.logger.debug(cov)
+    #     a, b, c = opt
+    #     self.logger.debug(f"a : {a}")
+    #     self.logger.debug(f"b : {b}")
+    #     self.logger.debug(f"c : {c}")
+    #
+    #
+    #     x = np.array([300000000 * 3, 300000000 * 2, 300000000])
+    #     plt.plot(x, fnc(x, a, b, c))
+    #     plt.show()
 
 
     def test_show_graph(self):

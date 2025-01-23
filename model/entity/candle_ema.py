@@ -22,9 +22,9 @@ class CandleEMA:
     def of(candle_id: str, stage: Stage,df: DataFrame):
         return CandleEMA(
             candle_id=candle_id,
-            short=float(df[EMA.SHORT]),
-            mid=float(df[EMA.MID]),
-            long=float(df[EMA.LONG]),
+            short=float(df[EMA.SHORT].iloc[-1]),
+            mid=float(df[EMA.MID].iloc[-1]),
+            long=float(df[EMA.LONG].iloc[-1]),
             stage=stage
         )
 

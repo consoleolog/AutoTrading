@@ -1,6 +1,7 @@
 from config.scheduler_config import SchedulerConfig
+from repository.candle_repository import CandleRepository
 from service.trading_service import TradingService
-
+from utils.database import connection
 
 class AppFactory:
     def __init__(self):
@@ -15,7 +16,13 @@ class AppFactory:
             "BNB/KRW",
             "COMP/KRW"
         ]
-        self.trading_service = TradingService(ticker_list)
+
+        self.candle_repository = CandleRepository(connection)
+        self.trading_service = TradingService(
+            ticker_list=ticker_list,
+            candle_repository=self.candle_repository
+        )
+
         self.scheduler_config = SchedulerConfig(
             trading_service=self.trading_service
         )

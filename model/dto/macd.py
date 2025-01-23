@@ -14,6 +14,10 @@ class MACD:
     MID_GRADIENT = "MACD_MID_GRADIENT"
     LOW_GRADIENT = "MACD_LOW_GRADIENT"
 
+    UP_HISTOGRAM = "MACD_UP_HISTOGRAM"
+    MID_HISTOGRAM = "MACD_MID_HISTOGRAM"
+    LOW_HISTOGRAM = "MACD_LOW_HISTOGRAM"
+
     def __init__(self, data:pd.DataFrame ,period_short:int = 12, period_long:int = 26, period_signal: int = 9, column: str = "close"):
         ShortEMA = EMA(data, period_short, column).val
         LongEMA = EMA(data, period_long, column).val
@@ -21,3 +25,4 @@ class MACD:
         data[f"MACD_{str(period_short)}_{str(period_long)}"] = ShortEMA - LongEMA
         self.val = data[f"MACD_{str(period_short)}_{str(period_long)}"]
         self.signal_val = EMA(data, period_signal, column = f"MACD_{str(period_short)}_{str(period_long)}").val
+        self.histogram_val = self.val - self.signal_val

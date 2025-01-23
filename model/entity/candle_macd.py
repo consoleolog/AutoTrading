@@ -14,6 +14,9 @@ class CandleMACD:
         up_gradient: float = None,
         mid_gradient: float = None,
         low_gradient: float = None,
+        up_histogram: float = None,
+        mid_histogram: float = None,
+        low_histogram: float = None,
     ):
         self.candle_id = candle_id
         self.up = up
@@ -25,6 +28,9 @@ class CandleMACD:
         self.up_gradient = up_gradient
         self.mid_gradient = mid_gradient
         self.low_gradient = low_gradient
+        self.up_histogram = up_histogram
+        self.mid_histogram = mid_histogram
+        self.low_histogram = low_histogram
 
     @staticmethod
     def of(candle_id, df):
@@ -39,6 +45,9 @@ class CandleMACD:
             up_gradient=float(df[MACD.UP_GRADIENT].iloc[-1]),
             mid_gradient=float(df[MACD.MID_GRADIENT].iloc[-1]),
             low_gradient=float(df[MACD.LOW_GRADIENT].iloc[-1]),
+            up_histogram=float(df[MACD.UP_HISTOGRAM].iloc[-1]),
+            mid_histogram=float(df[MACD.MID_HISTOGRAM].iloc[-1]),
+            low_histogram=float(df[MACD.LOW_HISTOGRAM].iloc[-1]),
         )
 
     def __str__(self):
@@ -54,4 +63,7 @@ class CandleMACD:
             up_gradient={self.up_gradient},
             mid_gradient={self.mid_gradient},
             low_gradient={self.low_gradient},
+            up_histogram={self.up_histogram},
+            mid_histogram={self.mid_histogram},
+            low_histogram={self.low_histogram}
         )"""
