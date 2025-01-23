@@ -1,0 +1,47 @@
+services:
+  server-blue:
+    container_name: server-blue
+    image: "${DOCKER_USERNAME}/autotrading:server-green-${GITHUB_SHA}"
+    env_file: .env
+    environment:
+      TZ: "Asia/Seoul"
+    ports:
+      - "3002:3000"
+    expose:
+      - "3002"
+    volumes:
+      - /log:/app/log
+    networks:
+      - web
+
+  signal-blue:
+    container_name: signal-blue
+    image: "${DOCKER_USERNAME}/autotrading:signal-green-${GITHUB_SHA}"
+    environment:
+      TZ: "Asia/Seoul"
+    ports:
+      - "3003:3000"
+    expose:
+      - "3003"
+    volumes:
+      - /log:/app/log
+    networks:
+      - web
+
+  nginx:
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - server-blue
+      - signal-blue
+    volumes:
+      - /var/log/nginx:/var/log/nginx
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    name: web
