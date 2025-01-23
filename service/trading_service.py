@@ -69,24 +69,20 @@ class TradingService:
         try:
             if mode == "buy":
                 peekout = data_utils.peekout(data, mode)
-                cross_signal = data_utils.cross_signal(data)
                 increase = data_utils.increase(data)
                 result["peekout"] = peekout
-                result["cross_signal"] = cross_signal
                 result["increase"] = increase
-                if peekout and cross_signal and increase:
+                if peekout and increase:
                     self._print_trading_report(ticker, data)
                     if krw > 8000 and balance == 0:
                         return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
 
             elif mode == "sell":
                 peekout = data_utils.peekout(data, mode)
-                cross_signal = data_utils.cross_signal(data)
                 decrease = data_utils.decrease(data)
                 result["peekout"] = peekout
-                result["cross_signal"] = cross_signal
                 result["decrease"] = decrease
-                if peekout and cross_signal and decrease:
+                if peekout and decrease:
                     self._print_trading_report(ticker, data)
                     if balance != 0:
                         return exchange_utils.create_sell_order(ticker, balance)
