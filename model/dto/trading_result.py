@@ -10,12 +10,21 @@ class TradingResult:
             self.decrease = trading_result['decrease']
 
     def __str__(self):
-        return f"""
-        TradingResult(
-        ticker: {self.ticker},
-        mode: {self.mode},
-        peekout: {self.peekout},
-        increase: {self.increase},
-        decrease: {self.decrease}
-        )
-        """
+        if self.mode == "buy":
+            return f"""
+            TradingResult(
+            ticker: {self.ticker},
+            mode: {self.mode},
+            peekout: {self.peekout},
+            increase: {self.increase},
+            )
+            """
+        elif self.mode == "sell":
+            return f"""
+            TradingResult(
+            ticker: {self.ticker},
+            mode: {self.mode},
+            peekout: {self.peekout},
+            decrease: {self.decrease},
+            )
+            """
