@@ -45,15 +45,11 @@ def select_mode(data:DataFrame) -> tuple[str, Stage]:
 def peekout(data: DataFrame, mode:str)->bool:
     up_hist, mid_hist, low_hist = data[MACD.UP_HISTOGRAM], data[MACD.MID_HISTOGRAM], data[MACD.LOW_HISTOGRAM]
     if mode == "buy":
-        return all([up_hist.iloc[-1] < 0, mid_hist.iloc[-1] < 0, low_hist.iloc[-1] < 0,
-                    up_hist.min() < 0, mid_hist.min() < 0, low_hist.min() < 0,
-                    up_hist.iloc[-1] > up_hist.min(),
+        return all([up_hist.iloc[-1] > up_hist.min(),
                     mid_hist.iloc[-1] > mid_hist.min(),
                     low_hist.iloc[-1] > low_hist.min()])
     elif mode == "sell":
-        return all([up_hist.iloc[-1] > 0, mid_hist.iloc[-1] > 0, low_hist.iloc[-1] > 0,
-                    up_hist.min() > 0, mid_hist.min() > 0, low_hist.min() > 0,
-                    up_hist.iloc[-1] < up_hist.max(),
+        return all([up_hist.iloc[-1] < up_hist.max(),
                     mid_hist.iloc[-1] < mid_hist.max(),
                     low_hist.iloc[-1] < low_hist.max()])
     else:
