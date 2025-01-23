@@ -1,0 +1,14 @@
+psycopg2-binary
+pandas~=2.2.3
+apscheduler~=3.10.4
+python-dotenv~=1.0.1
+fastapi~=0.115.2
+uvicorn[standard]
+requests~=2.32.3
+scipy~=1.13.1
+statistics~=1.0.3.5
+pyjwt~=2.9.0
+pydantic~=2.9.2
+sqlalchemy~=2.0.36
+matplotlib~=3.9.2
+ccxt~=4.4.42
