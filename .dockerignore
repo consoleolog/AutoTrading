@@ -1,0 +1,14 @@
+/.idea/
+/.github/
+.gitignore
+
+/log/
+/**/log/
+
+/__test__/
+
+/__pycache__/
+/**/__pycache__/
+
+docker-compose.*.yaml
+Dockerfile
