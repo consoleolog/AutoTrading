@@ -86,7 +86,7 @@ class TradingService:
                     if balance != 0 and profit > 0:
                         self._print_trading_report(ticker, data)
                         return exchange_utils.create_sell_order(ticker, balance)
-            return TradingResult(result)
+            return TradingResult(result).__str__()
         except DataException:
             return "error"
 

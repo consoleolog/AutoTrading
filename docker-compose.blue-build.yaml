@@ -34,22 +34,6 @@ services:
     networks:
       - web
 
-  nginx:
-    container_name: nginx
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - server-blue
-      - signal-blue
-    volumes:
-      - /var/log/nginx:/var/log/nginx
-    networks:
-      - web
-
 networks:
   web:
     external: true
