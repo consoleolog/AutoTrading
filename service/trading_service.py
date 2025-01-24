@@ -60,36 +60,34 @@ class TradingService:
         mode, stage = data_utils.select_mode(data)
         result["mode"] = mode
         result["stage"] = stage
-        return "success"
+        self.save_data(ticker, timeframe, data, stage)
 
-        # self.save_data(ticker, timeframe, data, stage)
-        #
-        # krw = exchange_utils.get_krw()
-        # balance = exchange_utils.get_balance(ticker)
-        # try:
-        #     if mode == "buy":
-        #         peekout = data_utils.peekout(data, mode)
-        #         increase = data_utils.increase(data)
-        #         result["peekout"] = peekout
-        #         result["increase"] = increase
-        #         if peekout and increase:
-        #             if krw > 8000 and balance == 0:
-        #                 self._print_trading_report(ticker, data)
-        #                 return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
-        #
-        #     elif mode == "sell":
-        #         peekout = data_utils.peekout(data, mode)
-        #         decrease = data_utils.decrease(data)
-        #         result["peekout"] = peekout
-        #         result["decrease"] = decrease
-        #         if peekout and decrease:
-        #             profit = exchange_utils.get_profit(ticker)
-        #             if balance != 0 and profit > 0:
-        #                 self._print_trading_report(ticker, data)
-        #                 return exchange_utils.create_sell_order(ticker, balance)
-        #     return result
-        # except DataException:
-        #     return "error"
+        krw = exchange_utils.get_krw()
+        balance = exchange_utils.get_balance(ticker)
+        try:
+            if mode == "buy":
+                peekout = data_utils.peekout(data, mode)
+                increase = data_utils.increase(data)
+                result["peekout"] = peekout
+                result["increase"] = increase
+                if peekout and increase:
+                    if krw > 8000 and balance == 0:
+                        self._print_trading_report(ticker, data)
+                        return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
+
+            elif mode == "sell":
+                peekout = data_utils.peekout(data, mode)
+                decrease = data_utils.decrease(data)
+                result["peekout"] = peekout
+                result["decrease"] = decrease
+                if peekout and decrease:
+                    profit = exchange_utils.get_profit(ticker)
+                    if balance != 0 and profit > 0:
+                        self._print_trading_report(ticker, data)
+                        return exchange_utils.create_sell_order(ticker, balance)
+            return result
+        except DataException:
+            return "error"
 
     def _print_trading_report(self, ticker: str, data: DataFrame):
         self.logger.info(f"""
