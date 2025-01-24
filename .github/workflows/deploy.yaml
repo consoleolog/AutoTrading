@@ -3,7 +3,7 @@ name: blue green cd
 on:
   push:
     branches:
-      - ["main"]
+      - main
 jobs:
   SSH:
     runs-on: ubuntu-20.04
