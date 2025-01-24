@@ -2,10 +2,13 @@ import inspect
 from typing import Any, Type, TypeVar
 import psycopg2
 from sqlalchemy import create_engine
-from config.scheduler_config import SchedulerConfig
+from config.impl.scheduler_config_impl import SchedulerConfigImpl
 from repository.candle_repository import CandleRepository
+from repository.impl.candle_repository_impl import CandleRepositoryImpl
+from service.impl.trading_service_impl import TradingServiceImpl
 from service.trading_service import TradingService
 from utils import database
+from utils.exception.not_registered_exception import NotRegisteredException
 
 T = TypeVar('T')
 
@@ -21,12 +24,12 @@ class DIContainer:
         if inspect.isabstract(type_):
             impl_type = type_.__subclasses__()
             if len(impl_type) == 0:
-                raise ValueError()
+                raise NotRegisteredException(impl_type, "Can't Find Type")
             impl_type = impl_type[0]
         try:
             obj = self.obj_map[impl_type]
         except KeyError:
-            raise TypeError()
+            raise NotRegisteredException(impl_type, "Can't Find Type")
         return obj
 
     def compose(self):
@@ -50,6 +53,6 @@ class DIContainer:
         )
         db_url = f"postgresql://{database.user}:{database.password}@{database.host}:{database.port}/{database}"
         engine = create_engine(db_url)
-        self.register(CandleRepository(connection, engine))
-        self.register(TradingService(ticker_list, self.get(CandleRepository)))
-        self.register(SchedulerConfig(self.get(TradingService)))
+        self.register(CandleRepositoryImpl(connection, engine))
+        self.register(TradingServiceImpl(ticker_list, self.get(CandleRepository)))
+        self.register(SchedulerConfigImpl(self.get(TradingService)))
