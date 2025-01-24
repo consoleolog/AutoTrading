@@ -4,10 +4,6 @@ on:
   push:
     branches: ["develop"]
 
-  env:
-    DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
-    GITHUB_SHA: ${{github.sha}}
-
   jobs:
     build:
       runs-on: ubuntu-latest
