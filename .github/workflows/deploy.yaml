@@ -17,7 +17,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Generate .env file
         run: |
-          cd AutoTrading 
           echo "${{secrets.ENA_FILE}}" > .env 
           echo "DOCKER_USERNAME=${{secrets.DOCKER_USERNAME}}" >> .env
           echo "GITHUB_SHA=${{github.sha}}" >> .env
@@ -30,7 +29,6 @@ jobs:
 
       - name: Build & Push Images
         run: |
-          cd AutoTrading
           docker-compose -f docker-compose.blue-build.yaml build
           docker-compose -f docker-compose.green-build.yaml build
           docker-compose -f docker-compose.blue-build.yaml push
