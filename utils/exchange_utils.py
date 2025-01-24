@@ -5,10 +5,14 @@ from dotenv import load_dotenv
 from model.const.timeframe import TimeFrame
 from model.dto.ticker_info import TickerInfo
 load_dotenv()
-exchange = getattr(ccxt, os.getenv("ID"))({
-    'apiKey': os.getenv("ACCESS_KEY"),
-    'secret': os.getenv("SECRET_KEY")
-})
+apiUrl = 'https://api.bithumb.com'
+accessKey = os.getenv("ACCESS_KEY")
+secretKey = os.getenv("SECRET_KEY")
+exchange = ccxt.bithumb(config={
+    'apiKey': accessKey,
+    'secret': secretKey,
+    'enableRateLimit': True
+    })
 
 def get_ticker_info(ticker:str) -> TickerInfo:
     tickers = exchange.fetch_tickers()
@@ -21,16 +25,32 @@ def get_krw() -> float:
     return float(krw["free"])
 
 def create_buy_order(ticker:str, amount: float):
-    return exchange.create_market_buy_order(
-        symbol=ticker,
-        amount=amount
-    )
+    try:
+        return exchange.create_market_buy_order(
+            symbol=ticker,
+            amount=amount
+        )
+    except ccxt.base.errors.BadRequest as err:
+        print(f"{ticker} - {str(err)}")
+        market, krw = ticker.split('/')
+        return exchange.create_market_buy_order(
+            symbol=f"{krw}-{market}",
+            amount=amount
+        )
 
 def create_sell_order(ticker:str, amount: float):
-    return exchange.create_market_sell_order(
-        symbol=ticker,
-        amount=amount
-    )
+    try:
+        return exchange.create_market_sell_order(
+            symbol=ticker,
+            amount=amount
+        )
+    except ccxt.base.errors.BadRequest as err:
+        print(f"{ticker} - {str(err)}")
+        market, krw = ticker.split('/')
+        return exchange.create_market_sell_order(
+            symbol=f"{krw}-{market}",
+            amount=amount
+        )
 
 def get_current_price(ticker:str)->float:
     ticker_info = get_ticker_info(ticker)
@@ -52,7 +72,7 @@ def get_balance(ticker: str) -> float:
     return float(balance['free'])
 
 def get_candles(ticker, timeframe: TimeFrame) -> pd.DataFrame:
-    ohlcv = exchange.fetch_ohlcv(symbol=ticker, timeframe=timeframe)
+    ohlcv = exchange.fetch_ohlcv(symbol=ticker, timeframe=str(timeframe))
     df = pd.DataFrame(ohlcv, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
     pd_ts = pd.to_datetime(df['datetime'], utc=True, unit='ms')
     pd_ts = pd_ts.dt.tz_convert("Asia/Seoul")
