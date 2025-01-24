@@ -1,0 +1,33 @@
+services:
+  server-blue:
+    container_name: server-blue
+    image: "autotrading"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      TZ: "Asia/Seoul"
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    command: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "3000"]
+    volumes:
+      - AutoTradingLog:/app/log
+    networks:
+      - web
+    healthcheck:
+      test: >
+        bash -c ': > /dev/tcp/localhost/3000' || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 2
+
+networks:
+  web:
+    external: true
+
+volumes:
+  AutoTradingLog:
+    external: true
