@@ -12,9 +12,9 @@ jobs:
       - name: ssh to compute engine
         uses: appleboy/ssh-action@master
         with:
-          key: ${{ secrets.AUTOTRADING_KEY }}
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
           script: |
             cd ~/cr/AutoTrading
             git pull https://github.com/consoleolog/AutoTrading.git
