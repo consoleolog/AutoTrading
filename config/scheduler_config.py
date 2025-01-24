@@ -1,8 +1,7 @@
+import uuid
 from apscheduler.schedulers.background import BackgroundScheduler
-
 from model.const.timeframe import TimeFrame
 from service.trading_service import TradingService
-
 
 class SchedulerConfig:
     def __init__(self, trading_service: TradingService):
@@ -23,7 +22,7 @@ class SchedulerConfig:
                 kwargs={
                   "timeframe": timeframe
                 },
-                id=f"TRADING_{timeframe}"
+                id=str(uuid.uuid4())
             )
 
     def start_scheduler(self):

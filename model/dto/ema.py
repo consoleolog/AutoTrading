@@ -8,7 +8,7 @@ from utils.exception.error_response import ErrorResponse
 
 class EMA:
     SHORT = "EMA_SHORT"
-    MID = "EMA_MIDDLE"
+    MID = "EMA_MID"
     LONG = "EMA_LONG"
 
     def __init__(self, data: DataFrame, period:int, column:str="close"):

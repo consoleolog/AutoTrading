@@ -1,15 +1,86 @@
+import pandas as pd
 import psycopg2
-
 from logger import LoggerFactory
+from model.const.timeframe import TimeFrame
 from model.entity.candle import Candle
 from model.entity.candle_ema import CandleEMA
 from model.entity.candle_macd import CandleMACD
 
-
 class CandleRepository:
-    def __init__(self, connection):
+    def __init__(self, connection, engine):
         self.connection = connection
         self.logger = LoggerFactory.get_logger(__class__.__name__, "AutoTrading")
+        self.engine = engine
+
+    def find_all(self):
+        sql = """SELECT C.CANDLE_ID,
+                         C.CREATED_AT,
+                         C.TICKER,
+                         C.TIMEFRAME,
+                         C.CLOSE,
+                         C.EMA_SHORT,
+                         C.EMA_MID,
+                         C.EMA_LONG,
+                         C.STAGE,
+                         C.MACD_UP,
+                         C.MACD_MID,
+                         C.MACD_LOW,
+                         C.MACD_UP_SIGNAL,
+                         C.MACD_MID_SIGNAL,
+                         C.MACD_LOW_SIGNAL,
+                         C.MACD_UP_GRADIENT,
+                         C.MACD_MID_GRADIENT,
+                         C.MACD_LOW_GRADIENT
+               FROM public.get_candles() AS C;"""
+        return pd.read_sql(sql, self.engine)
+
+    def find_all_by_ticker(self, ticker: str):
+        sql = """
+        SELECT C.CANDLE_ID,
+               C.CREATED_AT,
+               C.TICKER,
+               C.TIMEFRAME,
+               C.CLOSE,
+               C.EMA_SHORT,
+               C.EMA_MID,
+               C.EMA_LONG,
+               C.STAGE,
+               C.MACD_UP,
+               C.MACD_MID,
+               C.MACD_LOW,
+               C.MACD_UP_SIGNAL,
+               C.MACD_MID_SIGNAL,
+               C.MACD_LOW_SIGNAL,
+               C.MACD_UP_GRADIENT,
+               C.MACD_MID_GRADIENT,
+               C.MACD_LOW_GRADIENT
+        FROM public.get_candles_by_ticker(%(ticker)s) AS C;
+        """
+        params = {"ticker": ticker}
+        return pd.read_sql(sql, self.engine, params=params)
+
+    def find_all_by_ticker_and_timeframe(self, ticker:str, timeframe: TimeFrame):
+        sql = """SELECT C.CANDLE_ID,
+                         C.CREATED_AT,
+                         C.TICKER,
+                         C.TIMEFRAME,
+                         C.CLOSE,
+                         C.EMA_SHORT,
+                         C.EMA_MID,
+                         C.EMA_LONG,
+                         C.STAGE,
+                         C.MACD_UP,
+                         C.MACD_MID,
+                         C.MACD_LOW,
+                         C.MACD_UP_SIGNAL,
+                         C.MACD_MID_SIGNAL,
+                         C.MACD_LOW_SIGNAL,
+                         C.MACD_UP_GRADIENT,
+                         C.MACD_MID_GRADIENT,
+                         C.MACD_LOW_GRADIENT
+               FROM public.get_candles_by_ticker_and_timeframe(%(ticker)s, %(timeframe)s) AS C;"""
+        params = {"ticker": ticker, "timeframe": timeframe}
+        return pd.read_sql(sql, self.engine, params=params)
 
     def save_candle(self, candle: Candle)->Candle:
         try:

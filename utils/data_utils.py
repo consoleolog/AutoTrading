@@ -1,13 +1,12 @@
 import numpy as np
 from pandas import DataFrame
-
 from model.const.stage import Stage
 from model.dto.ema import EMA
 from model.dto.macd import MACD
 from utils.exception.data_exception import DataException
 from utils.exception.error_response import ErrorResponse
 
-def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, long_period:int=60):
+def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, long_period:int=60)->DataFrame:
     data[EMA.SHORT] = EMA(data, short_period).val
     data[EMA.MID] = EMA(data, mid_period).val
     data[EMA.LONG] = EMA(data, long_period).val
@@ -40,7 +39,6 @@ def select_mode(data:DataFrame) -> tuple[str, Stage]:
         return "sell", stage
     elif stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
         return "buy", stage
-
 
 def peekout(data: DataFrame, mode:str)->bool:
     up_hist, mid_hist, low_hist = data[MACD.UP_HISTOGRAM], data[MACD.MID_HISTOGRAM], data[MACD.LOW_HISTOGRAM]

@@ -2,18 +2,19 @@ import uuid
 from datetime import datetime
 from pandas import DataFrame
 from logger import LoggerFactory
-from multiprocessing.dummy import Pool as ThreadPool
 from model.const.stage import Stage
 from model.const.timeframe import TimeFrame
 from model.dto.ema import EMA
 from model.dto.macd import MACD
-from model.dto.trading_result import TradingResult
 from model.entity.candle import Candle
 from model.entity.candle_ema import CandleEMA
 from model.entity.candle_macd import CandleMACD
 from repository.candle_repository import CandleRepository
 from utils import data_utils, exchange_utils
+from concurrent.futures import ThreadPoolExecutor
+
 from utils.exception.data_exception import DataException
+
 
 class TradingService:
     def __init__(self,
@@ -47,10 +48,9 @@ class TradingService:
             pass
 
     def start_trading(self, timeframe: TimeFrame):
-        pool = ThreadPool(4)
-        result = pool.map(lambda ticker: self.auto_trading(ticker, timeframe), self.ticker_list)
-        pool.close()
-        pool.join()
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [executor.submit(self.auto_trading, ticker, timeframe) for ticker in self.ticker_list]
+            result = [f.result() for f in futures]
         self.logger.info(result)
 
     def auto_trading(self, ticker:str, timeframe: TimeFrame):
@@ -86,7 +86,7 @@ class TradingService:
                     if balance != 0 and profit > 0:
                         self._print_trading_report(ticker, data)
                         return exchange_utils.create_sell_order(ticker, balance)
-            return TradingResult(result).__str__()
+            return result
         except DataException:
             return "error"
 
