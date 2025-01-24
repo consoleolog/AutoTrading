@@ -1,13 +1,35 @@
+import inspect
+from typing import Any, Type, TypeVar
 import psycopg2
 from sqlalchemy import create_engine
-
 from config.scheduler_config import SchedulerConfig
 from repository.candle_repository import CandleRepository
 from service.trading_service import TradingService
 from utils import database
 
-class AppFactory:
+T = TypeVar('T')
+
+class DIContainer:
     def __init__(self):
+        self.obj_map = {}
+
+    def register(self, obj: Any):
+        self.obj_map[type(obj)] = obj
+
+    def get(self, type_: Type[T]) -> T:
+        impl_type = type_
+        if inspect.isabstract(type_):
+            impl_type = type_.__subclasses__()
+            if len(impl_type) == 0:
+                raise ValueError()
+            impl_type = impl_type[0]
+        try:
+            obj = self.obj_map[impl_type]
+        except KeyError:
+            raise TypeError()
+        return obj
+
+    def compose(self):
         ticker_list = [
             "BTC/KRW",
             "ETH/KRW",
@@ -28,13 +50,6 @@ class AppFactory:
         )
         db_url = f"postgresql://{database.user}:{database.password}@{database.host}:{database.port}/{database}"
         engine = create_engine(db_url)
-
-        self.candle_repository = CandleRepository(connection, engine)
-        self.trading_service = TradingService(
-            ticker_list=ticker_list,
-            candle_repository=self.candle_repository
-        )
-
-        self.scheduler_config = SchedulerConfig(
-            trading_service=self.trading_service
-        )
+        self.register(CandleRepository(connection, engine))
+        self.register(TradingService(ticker_list, self.get(CandleRepository)))
+        self.register(SchedulerConfig(self.get(TradingService)))
