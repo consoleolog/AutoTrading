@@ -48,11 +48,10 @@ class TradingService:
 
     def start_trading(self, timeframe: TimeFrame):
         pool = ThreadPool(4)
-        results = pool.map(lambda ticker: self.auto_trading(ticker, timeframe), self.ticker_list)
+        result = pool.map(lambda ticker: self.auto_trading(ticker, timeframe), self.ticker_list)
         pool.close()
         pool.join()
-        for result in results:
-            self.logger.info(result.__str__())
+        self.logger.info(result)
 
     def auto_trading(self, ticker:str, timeframe: TimeFrame):
         result = {"ticker": ticker}
@@ -73,8 +72,8 @@ class TradingService:
                 result["peekout"] = peekout
                 result["increase"] = increase
                 if peekout and increase:
-                    self._print_trading_report(ticker, data)
                     if krw > 8000 and balance == 0:
+                        self._print_trading_report(ticker, data)
                         return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
 
             elif mode == "sell":
@@ -83,8 +82,9 @@ class TradingService:
                 result["peekout"] = peekout
                 result["decrease"] = decrease
                 if peekout and decrease:
-                    self._print_trading_report(ticker, data)
-                    if balance != 0:
+                    profit = exchange_utils.get_profit(ticker)
+                    if balance != 0 and profit > 0:
+                        self._print_trading_report(ticker, data)
                         return exchange_utils.create_sell_order(ticker, balance)
             return TradingResult(result)
         except DataException:
