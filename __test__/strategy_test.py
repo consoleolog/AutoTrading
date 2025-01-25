@@ -89,20 +89,27 @@ class StrategyTest(unittest.TestCase):
         self.logger.debug(stage)
 
     def test_calculate_slope(self):
-        ticker = "ETH/KRW"
+        ticker = "BCH/KRW"
         candles = exchange_utils.get_candles(ticker, TimeFrame.MINUTE_5)
         data = data_utils.create_sub_data(candles)
+        self.logger.debug(data[EMA.SHORT_SLOPE].iloc[-1])
+        self.logger.debug(data[EMA.SHORT_SLOPE].iloc[-2])
 
         macd_up, macd_mid, macd_low = data[MACD.UP], data[MACD.MID], data[MACD.LOW]
-        #
+        ema_short, ema_mid , ema_long = data[EMA.SHORT], data[EMA.MID], data[EMA.LONG]
+        # self.logger.debug(ema_short.iloc[-1])
+        # self.logger.debug(ema_short.iloc[-2])
+        # self.logger.debug(ema_short.iloc[-1] - ema_short.iloc[-2])
+
         # # 두 지점 간 변화량 계산
-        y_change = macd_up.iloc[-2] - macd_up.iloc[-3]
-        x_change = 30
-
+        y_change = ema_short.iloc[-1] - ema_short.iloc[-2]
+        x_change = 14
+        # self.logger.debug()
         # 기울기 계산 (단위: degrees)
-        slope = (y_change / 500000000)
-
-        self.logger.debug(f"Slope: {slope}")
+        slope = (y_change / x_change)
+        self.logger.debug(slope)
+        #
+        # self.logger.debug(f"Slope: {slope}")
 
         # rise = macd_up - macd_up.shift(1)
         # # 기울기 = rise / run

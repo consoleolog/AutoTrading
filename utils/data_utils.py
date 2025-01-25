@@ -76,8 +76,8 @@ def increase(data: DataFrame) -> bool:
                 mid_gradient.iloc[-1] > mid_gradient.iloc[-2] > 0,
                 low_gradient.iloc[-1] > low_gradient.iloc[-2] > 0,
                 ema_up_slope.iloc[-1] > ema_up_slope.iloc[-2] > 0,
-                ema_mid_slope.iloc[-1] > ema_mid_slope.iloc[-2] > 0,
-                ema_long_slope.iloc[-1] > ema_long_slope.iloc[-2] > 0])
+                ema_mid_slope.iloc[-1] > ema_mid_slope.iloc[-2],
+                ema_long_slope.iloc[-1] > ema_long_slope.iloc[-2]])
 
 def decrease(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
