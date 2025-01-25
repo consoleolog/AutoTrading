@@ -115,13 +115,19 @@ class CandleRepositoryImpl(CandleRepository):
                     EMA_SHORT, 
                     EMA_MID,
                     EMA_LONG , 
-                    STAGE 
-                ) VALUES ( %s, %s, %s, %s, %s )
+                    STAGE ,
+                    EMA_SHORT_SLOPE,
+                    EMA_MID_SLOPE,
+                    EMA_LONG_SLOPE
+                ) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s )
                 """,(candle_ema.candle_id,
                      candle_ema.short,
                      candle_ema.mid,
                      candle_ema.long,
-                     candle_ema.stage))
+                     candle_ema.stage,
+                     candle_ema.short_slope,
+                     candle_ema.mid_slope,
+                     candle_ema.long_slope))
             self.connection.commit()
             return candle_ema
         except psycopg2.Error as e:

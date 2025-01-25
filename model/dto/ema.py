@@ -11,6 +11,10 @@ class EMA:
     MID = "EMA_MID"
     LONG = "EMA_LONG"
 
+    SHORT_SLOPE = "EMA_SHORT_SLOPE"
+    MID_SLOPE = "EMA_MID_SLOPE"
+    LONG_SLOPE = "EMA_LONG_SLOPE"
+
     def __init__(self, data: DataFrame, period:int, column:str="close"):
         self.logger = LoggerFactory.get_logger(__class__.__name__, log_file="Model")
         self.val = data[column].ewm(span=period, adjust=False).mean()

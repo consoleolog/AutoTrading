@@ -11,6 +11,10 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
     data[EMA.MID] = EMA(data, mid_period).val
     data[EMA.LONG] = EMA(data, long_period).val
 
+    data[EMA.SHORT_SLOPE] = (data[EMA.SHORT] - data[EMA.SHORT].shift(1) ) / short_period
+    data[EMA.MID_SLOPE] = (data[EMA.MID] - data[EMA.MID].shift(1) ) / mid_period
+    data[EMA.LONG_SLOPE] = (data[EMA.LONG] - data[EMA.LONG].shift(1) ) / long_period
+
     ShortMACD = MACD(data, short_period, mid_period)
     MidMACD = MACD(data, short_period, long_period)
     LowMACD = MACD(data, mid_period, long_period)

@@ -42,7 +42,7 @@ class TradingServiceImpl(TradingService):
             candle_ema = self.candle_repository.save_candle_ema(CandleEMA.of(candle.candle_id, stage, data))
             candle_macd = self.candle_repository.save_candle_macd(CandleMACD.of(candle_ema.candle_id, data))
         except Exception as e:
-            self.logger.warning(e)
+            self.logger.warning(e.__traceback__)
             pass
 
     def start_trading(self, timeframe: TimeFrame):
@@ -80,7 +80,7 @@ class TradingServiceImpl(TradingService):
                 result["decrease"] = decrease
                 if peekout and decrease:
                     profit = exchange_utils.get_profit(ticker)
-                    if balance != 0 and profit > 0:
+                    if balance != 0 and profit > 0.3:
                         self._print_trading_report(ticker, data)
                         return exchange_utils.create_sell_order(ticker, balance)
             return result
