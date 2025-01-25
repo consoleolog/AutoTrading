@@ -71,12 +71,20 @@ def cross_signal(data: DataFrame) -> bool:
 
 def increase(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
+    ema_up_slope, ema_mid_slope, ema_long_slope = data[EMA.SHORT_SLOPE], data[EMA.MID_SLOPE], data[EMA.LONG_SLOPE]
     return all([up_gradient.iloc[-1] > up_gradient.iloc[-2] > 0,
                 mid_gradient.iloc[-1] > mid_gradient.iloc[-2] > 0,
-                low_gradient.iloc[-1] > low_gradient.iloc[-2] > 0])
+                low_gradient.iloc[-1] > low_gradient.iloc[-2] > 0,
+                ema_up_slope.iloc[-1] > ema_up_slope.iloc[-2] > 0,
+                ema_mid_slope.iloc[-1] > ema_mid_slope.iloc[-2] > 0,
+                ema_long_slope.iloc[-1] > ema_long_slope.iloc[-2] > 0])
 
 def decrease(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
+    ema_up_slope, ema_mid_slope, ema_long_slope = data[EMA.SHORT_SLOPE], data[EMA.MID_SLOPE], data[EMA.LONG_SLOPE]
     return all([up_gradient.iloc[-1]  < up_gradient.iloc[-2],
                 mid_gradient.iloc[-1] <  mid_gradient.iloc[-2],
-                low_gradient.iloc[-1] <  low_gradient.iloc[-2]])
+                low_gradient.iloc[-1] <  low_gradient.iloc[-2],
+                ema_up_slope.iloc[-1] <  ema_up_slope.iloc[-2],
+                ema_mid_slope.iloc[-1] < ema_mid_slope.iloc[-2],
+                ema_long_slope.iloc[-1] < ema_long_slope.iloc[-2]])
