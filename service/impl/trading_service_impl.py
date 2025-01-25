@@ -80,7 +80,7 @@ class TradingServiceImpl(TradingService):
                 result["decrease"] = decrease
                 if peekout and decrease:
                     profit = exchange_utils.get_profit(ticker)
-                    if balance != 0 and profit > 0.2:
+                    if balance != 0 and profit > 0.5:
                         self._print_trading_report(ticker, data)
                         return exchange_utils.create_sell_order(ticker, balance)
             return result
