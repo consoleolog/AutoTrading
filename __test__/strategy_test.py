@@ -89,64 +89,31 @@ class StrategyTest(unittest.TestCase):
         self.logger.debug(stage)
 
     def test_calculate_slope(self):
-        ticker = "BCH/KRW"
+        ticker = "ETH/KRW"
         candles = exchange_utils.get_candles(ticker, TimeFrame.MINUTE_5)
         data = data_utils.create_sub_data(candles)
-        self.logger.debug(data[EMA.SHORT_SLOPE].iloc[-1])
-        self.logger.debug(data[EMA.SHORT_SLOPE].iloc[-2])
+        # data["MACD_CROSSOVER"] = np.where(
+        # (data[MACD.UP].shift(1) < data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] > data[MACD.UP_SIGNAL]), 'Bullish',
+        # np.where(
+        #     (data[MACD.UP].shift(1) > data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] < data[MACD.UP_SIGNAL]), 'Bearish',
+        #     None
+        #     )
+        # )
+        # crossovers = data[data['MACD_CROSSOVER'].notnull()]
+        # self.logger.debug(crossovers[[MACD.UP, MACD.UP_SIGNAL, 'MACD_CROSSOVER']])
+        self.logger.debug(data[MACD.UP_CROSSOVER])
+        self.logger.debug(data[MACD.MID_CROSSOVER])
+        self.logger.debug(data[MACD.LOW_CROSSOVER])
 
-        macd_up, macd_mid, macd_low = data[MACD.UP], data[MACD.MID], data[MACD.LOW]
-        ema_short, ema_mid , ema_long = data[EMA.SHORT], data[EMA.MID], data[EMA.LONG]
-        # self.logger.debug(ema_short.iloc[-1])
-        # self.logger.debug(ema_short.iloc[-2])
-        # self.logger.debug(ema_short.iloc[-1] - ema_short.iloc[-2])
-
-        # # 두 지점 간 변화량 계산
-        y_change = ema_short.iloc[-1] - ema_short.iloc[-2]
-        x_change = 14
-        # self.logger.debug()
-        # 기울기 계산 (단위: degrees)
-        slope = (y_change / x_change)
-        self.logger.debug(slope)
-        #
-        # self.logger.debug(f"Slope: {slope}")
-
-        # rise = macd_up - macd_up.shift(1)
-        # # 기울기 = rise / run
-        # run = 6
-        # slope = rise / run
-        # self.logger.debug( slope)
 
     def test_calculate_time(self):
         current_time = time.time()
 
-        # 5분(300초) 뺀 시간 계산
         five_minutes_ago = current_time - (5 * 60)
 
         # 결과 로그 출력
         self.logger.debug(f"현재 시간: {current_time}")
         self.logger.debug(f"5분 전 시간: {five_minutes_ago}")
-
-    # def test_curve_fit(self):
-    #     current_time = time.time()
-    #     ticker = "BTC/KRW"
-    #     candles = exchange_utils.get_candles(ticker, TimeFrame.MINUTE_5)
-    #     data = data_utils.create_sub_data(candles)
-    #
-    #     def fnc(x, a, b, c):
-    #         return a*x + b*x**2 + c
-    #     opt, cov = curve_fit(fnc, data[MACD.UP].iloc[-3:], [300000000 * 3, 300000000 * 2, 300000000])
-    #     self.logger.debug(opt)
-    #     self.logger.debug(cov)
-    #     a, b, c = opt
-    #     self.logger.debug(f"a : {a}")
-    #     self.logger.debug(f"b : {b}")
-    #     self.logger.debug(f"c : {c}")
-    #
-    #
-    #     x = np.array([300000000 * 3, 300000000 * 2, 300000000])
-    #     plt.plot(x, fnc(x, a, b, c))
-    #     plt.show()
 
 
     def test_show_graph(self):

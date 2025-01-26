@@ -18,6 +18,21 @@ class MACD:
     MID_HISTOGRAM = "MACD_MID_HISTOGRAM"
     LOW_HISTOGRAM = "MACD_LOW_HISTOGRAM"
 
+    UP_CROSSOVER = "MACD_UP_CROSSOVER"
+    MID_CROSSOVER = "MACD_MID_CROSSOVER"
+    LOW_CROSSOVER = "MACD_LOW_CROSSOVER"
+
+    UP_BULLISH = "MACD_UP_BULLISH"
+    MID_BULLISH = "MACD_MID_BULLISH"
+    LOW_BULLISH = "MACD_LOW_BULLISH"
+
+    UP_BEARISH = "MACD_UP_BEARISH"
+    MID_BEARISH = "MACD_MID_BEARISH"
+    LOW_BEARISH = "MACD_LOW_BEARISH"
+
+    BEARISH = "BEARISH"
+    BULLISH = "BULLISH"
+
     def __init__(self, data:pd.DataFrame ,period_short:int = 12, period_long:int = 26, period_signal: int = 9, column: str = "close"):
         ShortEMA = EMA(data, period_short, column).val
         LongEMA = EMA(data, period_long, column).val

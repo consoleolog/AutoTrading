@@ -11,8 +11,8 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
     data[EMA.MID] = EMA(data, mid_period).val
     data[EMA.LONG] = EMA(data, long_period).val
 
-    data[EMA.SHORT_SLOPE] = (data[EMA.SHORT] - data[EMA.SHORT].shift(1) ) / short_period
-    data[EMA.MID_SLOPE] = (data[EMA.MID] - data[EMA.MID].shift(1) ) / mid_period
+    data[EMA.SHORT_SLOPE] = (data[EMA.SHORT] - data[EMA.SHORT].shift(3) ) / short_period
+    data[EMA.MID_SLOPE] = (data[EMA.MID] - data[EMA.MID].shift(3) ) / mid_period
     data[EMA.LONG_SLOPE] = (data[EMA.LONG] - data[EMA.LONG].shift(1) ) / long_period
 
     ShortMACD = MACD(data, short_period, mid_period)
@@ -35,6 +35,27 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
     data[MACD.MID_HISTOGRAM] = MidMACD.histogram_val
     data[MACD.LOW_HISTOGRAM] = LowMACD.histogram_val
 
+    data[MACD.UP_CROSSOVER] = np.where(
+        (data[MACD.UP].shift(1) < data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] > data[MACD.UP_SIGNAL]), MACD.UP_BULLISH,
+        np.where(
+            (data[MACD.UP].shift(1) > data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] < data[MACD.UP_SIGNAL]), MACD.UP_BEARISH,
+            None
+        )
+    )
+    data[MACD.MID_CROSSOVER] = np.where(
+        (data[MACD.MID].shift(1) < data[MACD.MID_SIGNAL].shift(1)) & (data[MACD.MID] > data[MACD.MID_SIGNAL]), MACD.MID_BULLISH,
+        np.where(
+            (data[MACD.MID].shift(1) > data[MACD.MID_SIGNAL].shift(1)) & (data[MACD.MID] < data[MACD.MID_SIGNAL]), MACD.MID_BEARISH,
+            None
+        )
+    )
+    data[MACD.LOW_CROSSOVER] = np.where(
+        (data[MACD.LOW].shift(1) < data[MACD.LOW_SIGNAL].shift(1)) & (data[MACD.LOW] > data[MACD.LOW_SIGNAL]), MACD.LOW_BULLISH,
+        np.where(
+            (data[MACD.LOW].shift(1) > data[MACD.LOW_SIGNAL].shift(1)) & (data[MACD.LOW] < data[MACD.LOW_SIGNAL]), MACD.LOW_BEARISH,
+            None
+        )
+    )
     return data
 
 def select_mode(data:DataFrame) -> tuple[str, Stage]:
@@ -58,16 +79,14 @@ def peekout(data: DataFrame, mode:str)->bool:
         error = ErrorResponse("BAD_REQUEST", 400, "UnExcepted Data")
         raise DataException(error)
 
-def cross_signal(data: DataFrame) -> bool:
-    up, mid, low = data[MACD.UP], data[MACD.MID], data[MACD.LOW]
-    up_signal, mid_signal, low_signal = data[MACD.UP_SIGNAL], data[MACD.MID_SIGNAL], data[MACD.LOW_SIGNAL]
-
-    before = up.iloc[-1] > up_signal.iloc[-1]
-    after = up.iloc[-2] > up_signal.iloc[-2]
-    if before != after:
-        return True
+def cross_signal(data: DataFrame):
+    up_crossover, mid_crossover, low_crossover = data[MACD.UP_CROSSOVER], data[MACD.MID_CROSSOVER], data[MACD.LOW_CROSSOVER]
+    if up_crossover.iloc[-1] == MACD.UP_BULLISH and mid_crossover.iloc[-1] == MACD.MID_BULLISH and low_crossover.iloc[-1] == MACD.LOW_BULLISH:
+        return MACD.BULLISH
+    elif up_crossover.iloc[-1] == MACD.UP_BEARISH and mid_crossover.iloc[-1] == MACD.MID_BEARISH and low_crossover.iloc[-1] == MACD.LOW_BEARISH:
+        return MACD.BEARISH
     else:
-        return False
+        return None
 
 def increase(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]

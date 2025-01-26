@@ -9,9 +9,9 @@ class SchedulerConfigImpl(SchedulerConfig):
     def __init__(self, trading_service: TradingService):
         self._scheduler = BackgroundScheduler()
         self.trading_service = trading_service
-        timeframes = [TimeFrame.MINUTE_5, TimeFrame.HALF_HOUR, TimeFrame.HOUR, TimeFrame.HOUR_4]
+        timeframes = [TimeFrame.MINUTE_15, TimeFrame.HALF_HOUR, TimeFrame.HOUR, TimeFrame.HOUR_4]
         timeframe_keys = {
-            TimeFrame.MINUTE_5: 5,
+            TimeFrame.MINUTE_15: 15,
             TimeFrame.HALF_HOUR: 30,
             TimeFrame.HOUR: 60,
             TimeFrame.HOUR_4: 240
