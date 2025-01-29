@@ -95,8 +95,8 @@ def cross_signal(data: DataFrame):
         return MACD.BULLISH
 
     if (
-        up_crossover.isin([MACD.UP_BEARISH]).any() and
-        mid_crossover.isin([MACD.MID_BEARISH]).any() and
+        up_crossover.isin([MACD.UP_BEARISH]).any() or
+        mid_crossover.isin([MACD.MID_BEARISH]).any() or
         low_crossover.isin([MACD.LOW_BEARISH]).any()
     ):
         return MACD.BEARISH
@@ -121,6 +121,6 @@ def decrease(data: DataFrame) -> bool:
     return all([up_gradient.iloc[-1]  < up_gradient.iloc[-2],
                 mid_gradient.iloc[-1] <  mid_gradient.iloc[-2],
                 low_gradient.iloc[-1] <  low_gradient.iloc[-2],
-                ema_up_slope.iloc[-1] <  ema_up_slope.iloc[-2],
-                ema_mid_slope.iloc[-1] < ema_mid_slope.iloc[-2],
-                ema_long_slope.iloc[-1] < ema_long_slope.iloc[-2]])
+                ema_up_slope.iloc[-1] <  0,
+                ema_mid_slope.iloc[-1] < 0,
+                ema_long_slope.iloc[-1] < 0])
