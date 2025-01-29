@@ -12,7 +12,6 @@ from model.entity.candle_macd import CandleMACD
 from repository.candle_repository import CandleRepository
 from service.trading_service import TradingService
 from utils import exchange_utils, data_utils
-from utils.exception.data_exception import DataException
 
 class TradingServiceImpl(TradingService):
     def __init__(self,
@@ -23,7 +22,7 @@ class TradingServiceImpl(TradingService):
         LoggerFactory.set_stream_level(LoggerFactory.INFO)
         self.ticker_list = ticker_list
         self.price_keys = {
-            "BTC/KRW": 0.00005,
+            "BTC/KRW": 0.0001,
             "ETH/KRW": 0.0015,
             "BCH/KRW": 0.011,
             "AAVE/KRW": 0.015,

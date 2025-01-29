@@ -13,6 +13,7 @@ exchange = ccxt.bithumb(config={
     'secret': secretKey,
     'enableRateLimit': True
     })
+exchange.verbose = True
 
 def get_ticker_info(ticker:str) -> TickerInfo:
     tickers = exchange.fetch_tickers()
