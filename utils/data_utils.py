@@ -79,22 +79,39 @@ def peekout(data: DataFrame, mode:str)->bool:
         error = ErrorResponse("BAD_REQUEST", 400, "UnExcepted Data")
         raise DataException(error)
 
+
 def cross_signal(data: DataFrame):
-    up_crossover, mid_crossover, low_crossover = data[MACD.UP_CROSSOVER], data[MACD.MID_CROSSOVER], data[MACD.LOW_CROSSOVER]
-    if up_crossover.iloc[-1] == MACD.UP_BULLISH and mid_crossover.iloc[-1] == MACD.MID_BULLISH and low_crossover.iloc[-1] == MACD.LOW_BULLISH:
+    up_crossover, mid_crossover, low_crossover = (
+        data[MACD.UP_CROSSOVER].iloc[-4:],
+        data[MACD.MID_CROSSOVER].iloc[-4:],
+        data[MACD.LOW_CROSSOVER].iloc[-4:],
+    )
+
+    if (
+        up_crossover.isin([MACD.UP_BULLISH]).any() and
+        mid_crossover.isin([MACD.MID_BULLISH]).any() and
+        low_crossover.isin([MACD.LOW_BULLISH]).any()
+    ):
         return MACD.BULLISH
-    elif up_crossover.iloc[-1] == MACD.UP_BEARISH and mid_crossover.iloc[-1] == MACD.MID_BEARISH and low_crossover.iloc[-1] == MACD.LOW_BEARISH:
+
+    if (
+        up_crossover.isin([MACD.UP_BEARISH]).any() and
+        mid_crossover.isin([MACD.MID_BEARISH]).any() and
+        low_crossover.isin([MACD.LOW_BEARISH]).any()
+    ):
         return MACD.BEARISH
-    else:
-        return None
 
 def increase(data: DataFrame) -> bool:
     up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
     ema_up_slope, ema_mid_slope, ema_long_slope = data[EMA.SHORT_SLOPE], data[EMA.MID_SLOPE], data[EMA.LONG_SLOPE]
-    return all([up_gradient.iloc[-1] > up_gradient.iloc[-2] > 0,
-                mid_gradient.iloc[-1] > mid_gradient.iloc[-2] > 0,
-                low_gradient.iloc[-1] > low_gradient.iloc[-2] > 0,
-                ema_up_slope.iloc[-1] > ema_up_slope.iloc[-2] > 0,
+    return all([up_gradient.iloc[-1]  > 0,
+                up_gradient.iloc[-2]  > 0,
+                mid_gradient.iloc[-1] > 0,
+                mid_gradient.iloc[-2] > 0,
+                low_gradient.iloc[-1] > 0,
+                low_gradient.iloc[-2] > 0,
+                ema_up_slope.iloc[-1] > 0,
+                ema_up_slope.iloc[-2] > 0,
                 ema_mid_slope.iloc[-1] > ema_mid_slope.iloc[-2],
                 ema_long_slope.iloc[-1] > ema_long_slope.iloc[-2]])
 
