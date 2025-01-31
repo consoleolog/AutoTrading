@@ -82,9 +82,9 @@ def peekout(data: DataFrame, mode:str)->bool:
 
 def cross_signal(data: DataFrame):
     up_crossover, mid_crossover, low_crossover = (
-        data[MACD.UP_CROSSOVER].iloc[-4:],
-        data[MACD.MID_CROSSOVER].iloc[-4:],
-        data[MACD.LOW_CROSSOVER].iloc[-4:],
+        data[MACD.UP_CROSSOVER].iloc[-5:],
+        data[MACD.MID_CROSSOVER].iloc[-5:],
+        data[MACD.LOW_CROSSOVER].iloc[-5:],
     )
 
     if (
@@ -96,8 +96,7 @@ def cross_signal(data: DataFrame):
 
     if (
         up_crossover.isin([MACD.UP_BEARISH]).any() and
-        mid_crossover.isin([MACD.MID_BEARISH]).any() and
-        low_crossover.isin([MACD.LOW_BEARISH]).any()
+        mid_crossover.isin([MACD.MID_BEARISH]).any()
     ):
         return MACD.BEARISH
 
