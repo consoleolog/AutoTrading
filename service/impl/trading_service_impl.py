@@ -92,12 +92,10 @@ class TradingServiceImpl(TradingService):
                 result["order"] = order
         else:
             peekout = data_utils.peekout(data, "sell")
-            signal = data_utils.cross_signal(data)
             profit = self.calculate_profit(ticker)
             result["peekout"] = peekout
-            # result["signal"] = signal
             result["profit"] = profit
-            if peekout and data_utils.decrease(data) and profit > 0.1:
+            if data_utils.decrease(data) and profit > 0.1:
                 response = exchange_utils.create_sell_order(ticker, balance)
                 order = self.save_order_history(candle, response)
                 result["order"] = order

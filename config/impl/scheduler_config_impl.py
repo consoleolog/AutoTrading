@@ -14,16 +14,16 @@ class SchedulerConfigImpl(SchedulerConfig):
             TimeFrame.HALF_HOUR: 30,
             TimeFrame.HOUR: 60
         }
-        for timeframe in timeframes:
-            self._scheduler.add_job(
-                func=trading_service.start_trading,
-                trigger='interval',
-                minutes=timeframe_keys[timeframe],
-                kwargs={
-                  "timeframe": timeframe
-                },
-                id=str(uuid.uuid4())
-            )
+        # for timeframe in timeframes:
+        self._scheduler.add_job(
+            func=trading_service.start_trading,
+            trigger='interval',
+            minutes=5,
+            kwargs={
+              "timeframe": TimeFrame.MINUTE_5
+            },
+            id=str(uuid.uuid4())
+        )
 
     def start_scheduler(self):
         return self._scheduler.start()
