@@ -94,10 +94,7 @@ def cross_signal(data: DataFrame):
     ):
         return MACD.BULLISH
 
-    if (
-        up_crossover.isin([MACD.UP_BEARISH]).any() and
-        mid_crossover.isin([MACD.MID_BEARISH]).any()
-    ):
+    if up_crossover.isin([MACD.UP_BEARISH]).any() :
         return MACD.BEARISH
 
 def increase(data: DataFrame) -> bool:
