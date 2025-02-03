@@ -1,10 +1,12 @@
 import inspect
-from typing import Any, Type, TypeVar
 import psycopg2
+from typing import Any, Type, TypeVar
 from sqlalchemy import create_engine
 from config.impl.scheduler_config_impl import SchedulerConfigImpl
 from repository.candle_repository import CandleRepository
 from repository.impl.candle_repository_impl import CandleRepositoryImpl
+from repository.impl.order_repository_impl import OrderRepositoryImpl
+from repository.order_repository import OrderRepository
 from service.impl.trading_service_impl import TradingServiceImpl
 from service.trading_service import TradingService
 from utils import database
@@ -51,8 +53,9 @@ class DIContainer:
             password=database.password,
             port=database.port,
         )
-        db_url = f"postgresql://{database.user}:{database.password}@{database.host}:{database.port}/{database}"
+        db_url = f"postgresql://{database.user}:{database.password}@{database.host}:{database.port}/{database.database}"
         engine = create_engine(db_url)
         self.register(CandleRepositoryImpl(connection, engine))
-        self.register(TradingServiceImpl(ticker_list, self.get(CandleRepository)))
+        self.register(OrderRepositoryImpl(connection, engine))
+        self.register(TradingServiceImpl(ticker_list, self.get(CandleRepository), self.get(OrderRepository)))
         self.register(SchedulerConfigImpl(self.get(TradingService)))

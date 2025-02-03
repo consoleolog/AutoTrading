@@ -9,7 +9,9 @@ from model.dto.macd import MACD
 from model.entity.candle import Candle
 from model.entity.candle_ema import CandleEMA
 from model.entity.candle_macd import CandleMACD
+from model.entity.order import Order
 from repository.candle_repository import CandleRepository
+from repository.order_repository import OrderRepository
 from service.trading_service import TradingService
 from utils import exchange_utils, data_utils
 
@@ -17,6 +19,7 @@ class TradingServiceImpl(TradingService):
     def __init__(self,
                  ticker_list,
                  candle_repository: CandleRepository,
+                 order_repository: OrderRepository,
                  ):
         self.logger = LoggerFactory.get_logger(__class__.__name__, "AutoTrading")
         LoggerFactory.set_stream_level(LoggerFactory.INFO)
@@ -33,16 +36,32 @@ class TradingServiceImpl(TradingService):
             "COMP/KRW": 0.06,
         }
         self.candle_repository = candle_repository
+        self.order_repository = order_repository
 
-    def save_data(self, ticker , timeframe: TimeFrame, data, stage: Stage):
+    def save_candle_data(self, ticker , timeframe: TimeFrame, data, stage: Stage)->Candle:
         try:
             candle = self.candle_repository.save_candle(
                 Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe))
             candle_ema = self.candle_repository.save_candle_ema(CandleEMA.of(candle.candle_id, stage, data))
-            candle_macd = self.candle_repository.save_candle_macd(CandleMACD.of(candle_ema.candle_id, data))
+            self.candle_repository.save_candle_macd(CandleMACD.of(candle_ema.candle_id, data))
+            return candle
         except Exception as e:
             self.logger.warning(e.__traceback__)
             pass
+    def save_order_history(self, candle, response)-> Order:
+        try:
+            order = Order.of(candle, response, datetime.now())
+            self.order_repository.save(order)
+            return order
+        except Exception as e:
+            self.logger.warning(e.__traceback__)
+            pass
+
+    def calculate_profit(self, ticker):
+        order_history = self.order_repository.find_by_ticker(ticker)
+        current_price = exchange_utils.get_current_price(ticker)
+        buy_price = float(order_history["close"].iloc[-1])
+        return (current_price - buy_price) / buy_price * 100.0
 
     def start_trading(self, timeframe: TimeFrame):
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -57,7 +76,7 @@ class TradingServiceImpl(TradingService):
         mode, stage = data_utils.select_mode(data)
         result["mode"] = mode
         result["stage"] = stage
-        self.save_data(ticker, timeframe, data, stage)
+        candle = self.save_candle_data(ticker, timeframe, data, stage)
 
         krw = exchange_utils.get_krw()
         balance = exchange_utils.get_balance(ticker)
@@ -68,14 +87,20 @@ class TradingServiceImpl(TradingService):
             result["signal"] = signal
             if peekout and signal == MACD.BULLISH and krw > 8000:
                 self._print_trading_report(ticker, data)
-                return exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
+                response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
+                order = self.save_order_history(candle, response)
+                result["order"] = order
         else:
             peekout = data_utils.peekout(data, "sell")
             signal = data_utils.cross_signal(data)
+            profit = self.calculate_profit(ticker)
             result["peekout"] = peekout
-            result["signal"] = signal
-            if peekout and signal == MACD.BEARISH:
-                return exchange_utils.create_sell_order(ticker, balance)
+            # result["signal"] = signal
+            result["profit"] = profit
+            if peekout and data_utils.decrease(data) and profit > 0.1:
+                response = exchange_utils.create_sell_order(ticker, balance)
+                order = self.save_order_history(candle, response)
+                result["order"] = order
         return result
 
     def _print_trading_report(self, ticker, data):
