@@ -39,21 +39,21 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
         (data[MACD.UP].shift(1) < data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] > data[MACD.UP_SIGNAL]), MACD.UP_BULLISH,
         np.where(
             (data[MACD.UP].shift(1) > data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] < data[MACD.UP_SIGNAL]), MACD.UP_BEARISH,
-            np.nan
+            None
         )
     )
     data[MACD.MID_CROSSOVER] = np.where(
         (data[MACD.MID].shift(1) < data[MACD.MID_SIGNAL].shift(1)) & (data[MACD.MID] > data[MACD.MID_SIGNAL]), MACD.MID_BULLISH,
         np.where(
             (data[MACD.MID].shift(1) > data[MACD.MID_SIGNAL].shift(1)) & (data[MACD.MID] < data[MACD.MID_SIGNAL]), MACD.MID_BEARISH,
-            np.nan
+            None
         )
     )
     data[MACD.LOW_CROSSOVER] = np.where(
         (data[MACD.LOW].shift(1) < data[MACD.LOW_SIGNAL].shift(1)) & (data[MACD.LOW] > data[MACD.LOW_SIGNAL]), MACD.LOW_BULLISH,
         np.where(
             (data[MACD.LOW].shift(1) > data[MACD.LOW_SIGNAL].shift(1)) & (data[MACD.LOW] < data[MACD.LOW_SIGNAL]), MACD.LOW_BEARISH,
-            np.nan
+            None
         )
     )
     return data
