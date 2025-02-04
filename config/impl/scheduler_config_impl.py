@@ -9,18 +9,14 @@ class SchedulerConfigImpl(SchedulerConfig):
     def __init__(self, trading_service: TradingService):
         self._scheduler = BackgroundScheduler()
         self.trading_service = trading_service
-        timeframes = [TimeFrame.HALF_HOUR, TimeFrame.HOUR]
-        timeframe_keys = {
-            TimeFrame.HALF_HOUR: 30,
-            TimeFrame.HOUR: 60
-        }
+
         # for timeframe in timeframes:
         self._scheduler.add_job(
             func=trading_service.start_trading,
             trigger='interval',
-            minutes=5,
+            minutes=TimeFrame.KEYS[TimeFrame.MINUTE],
             kwargs={
-              "timeframe": TimeFrame.MINUTE_5
+              "timeframe": TimeFrame.MINUTE
             },
             id=str(uuid.uuid4())
         )
