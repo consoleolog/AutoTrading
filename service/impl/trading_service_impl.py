@@ -82,23 +82,23 @@ class TradingServiceImpl(TradingService):
         balance = exchange_utils.get_balance(ticker)
         if balance == 0:
             peekout = data_utils.peekout(data, "buy")
-            signal = data_utils.cross_signal(data)
+            bullish = data_utils.bullish(data)
             result["peekout"] = peekout
-            result["signal"] = signal
-            if peekout and signal == MACD.BULLISH and krw > 8000:
+            result["bullish"] = bullish
+            if peekout and bullish and krw > 8000:
                 self._print_trading_report(ticker, data)
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
                 order = self.save_order_history(candle, response)
-                result["order"] = order
+                result["order"] = order.__str__()
         else:
             peekout = data_utils.peekout(data, "sell")
             profit = self.calculate_profit(ticker)
             result["peekout"] = peekout
             result["profit"] = profit
-            if peekout and profit > 0.1:
+            if peekout:
                 response = exchange_utils.create_sell_order(ticker, balance)
                 order = self.save_order_history(candle, response)
-                result["order"] = order
+                result["order"] = order.__str__()
         return result
 
     def _print_trading_report(self, ticker, data):
