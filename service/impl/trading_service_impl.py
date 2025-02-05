@@ -33,7 +33,7 @@ class TradingServiceImpl(TradingService):
             "BSV/KRW": 0.1,
             "YFI/KRW": 0.0006,
             "BNB/KRW": 0.007,
-            "COMP/KRW": 0.06,
+            "COMP/KRW": 0.08,
         }
         self.candle_repository = candle_repository
         self.order_repository = order_repository

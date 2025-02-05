@@ -42,7 +42,7 @@ class ExchangeUtilsTest(unittest.TestCase):
 
     def test_create_buy_order(self):
         ticker = "COMP/KRW"
-        amount = 0.06
+        amount = 0.07
         res = exchange_utils.create_buy_order(ticker, amount)
         self.logger.debug(res)
 
