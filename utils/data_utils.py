@@ -78,7 +78,7 @@ def peekout(data: DataFrame, mode:str)->bool:
     elif mode == "sell":
         return all([up_hist.iloc[-1] < up_hist.max(),
                     mid_hist.iloc[-1] < mid_hist.max(),
-                    # low_hist.iloc[-1] < low_hist.max()
+                    low_hist.iloc[-1] < low_hist.max()
                     ])
     else:
         error = ErrorResponse("BAD_REQUEST", 400, "UnExcepted Data")
