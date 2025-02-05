@@ -85,13 +85,15 @@ def peekout(data: DataFrame, mode:str)->bool:
         raise DataException(error)
 
 def bullish(data: DataFrame):
-    up, mid = (
-        data[MACD.UP_CROSSOVER].iloc[-3:],
-        data[MACD.MID_CROSSOVER].iloc[-3:],
+    up, mid, low = (
+        data[MACD.UP_CROSSOVER].iloc[-5:],
+        data[MACD.MID_CROSSOVER].iloc[-5:],
+        data[MACD.LOW_CROSSOVER].iloc[-5:]
     )
     return True if (
             up.isin([MACD.UP_BULLISH]).any() and
-            mid.isin([MACD.MID_BULLISH]).any()
+            mid.isin([MACD.MID_BULLISH]).any() and
+            low.isin([MACD.LOW_BULLISH])
     ) else False
 
 def cross_signal(data: DataFrame):
