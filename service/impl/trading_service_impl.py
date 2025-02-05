@@ -89,7 +89,7 @@ class TradingServiceImpl(TradingService):
                 self._print_trading_report(ticker, data)
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
                 order = self.save_order_history(candle, response)
-                result["order"] = order.__str__()
+                result["order"] = order.order_id
         else:
             peekout = data_utils.peekout(data, "sell")
             profit = self.calculate_profit(ticker)
@@ -98,7 +98,7 @@ class TradingServiceImpl(TradingService):
             if peekout:
                 response = exchange_utils.create_sell_order(ticker, balance)
                 order = self.save_order_history(candle, response)
-                result["order"] = order.__str__()
+                result["order"] = order.order_id
         return result
 
     def _print_trading_report(self, ticker, data):
