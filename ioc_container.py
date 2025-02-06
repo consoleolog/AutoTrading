@@ -2,19 +2,17 @@ import inspect
 import psycopg2
 from typing import Any, Type, TypeVar
 from sqlalchemy import create_engine
-from config.impl.scheduler_config_impl import SchedulerConfigImpl
-from repository.candle_repository import CandleRepository
-from repository.impl.candle_repository_impl import CandleRepositoryImpl
-from repository.impl.order_repository_impl import OrderRepositoryImpl
-from repository.order_repository import OrderRepository
-from service.impl.trading_service_impl import TradingServiceImpl
+from config.scheduler_config import SchedulerConfig
+from repository.candle_repository import ICandleRepository, CandleRepository
+from repository.order_repository import IOrderRepository, OrderRepository
 from service.trading_service import TradingService
+from service.trading_service import ITradingService
 from utils import database
 from utils.exception.not_registered_exception import NotRegisteredException
 
 T = TypeVar('T')
 
-class DIContainer:
+class IocContainer:
     def __init__(self):
         self.obj_map = {}
 
@@ -55,7 +53,7 @@ class DIContainer:
         )
         db_url = f"postgresql://{database.user}:{database.password}@{database.host}:{database.port}/{database.database}"
         engine = create_engine(db_url)
-        self.register(CandleRepositoryImpl(connection, engine))
-        self.register(OrderRepositoryImpl(connection, engine))
-        self.register(TradingServiceImpl(ticker_list, self.get(CandleRepository), self.get(OrderRepository)))
-        self.register(SchedulerConfigImpl(self.get(TradingService)))
+        self.register(CandleRepository(connection, engine))
+        self.register(OrderRepository(connection, engine))
+        self.register(TradingService(ticker_list, self.get(ICandleRepository), self.get(IOrderRepository)))
+        self.register(SchedulerConfig(self.get(ITradingService)))

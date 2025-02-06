@@ -2,25 +2,25 @@ import unittest
 import uuid
 from datetime import datetime
 
-from di_container import DIContainer
+from ioc_container import IocContainer
 from logger import LoggerFactory
 from model.const.timeframe import TimeFrame
 from model.entity.candle import Candle
-from repository.candle_repository import CandleRepository
-from repository.order_repository import OrderRepository
-from service.trading_service import TradingService
+from repository.candle_repository import ICandleRepository
+from repository.order_repository import IOrderRepository
+from service.trading_service import ITradingService
 from utils import exchange_utils, data_utils
 
 
 class TradingServiceTest(unittest.TestCase):
 
     def setUp(self):
-        self.container = DIContainer()
+        self.container = IocContainer()
         self.container.compose()
 
-        self.candle_repository = self.container.get(CandleRepository)
-        self.order_repository = self.container.get(OrderRepository)
-        self.trading_service = self.container.get(TradingService)
+        self.candle_repository = self.container.get(ICandleRepository)
+        self.order_repository = self.container.get(IOrderRepository)
+        self.trading_service = self.container.get(ITradingService)
 
         self.logger = LoggerFactory().get_logger(__class__.__name__)
 

@@ -1,14 +1,14 @@
 import unittest
-from di_container import DIContainer
+from ioc_container import IocContainer
 from logger import LoggerFactory
 from model.const.timeframe import TimeFrame
-from repository.candle_repository import CandleRepository
+from repository.candle_repository import ICandleRepository
 
 class CandleRepositoryTest(unittest.TestCase):
     def setUp(self):
-        self.container = DIContainer()
+        self.container = IocContainer()
         self.logger = LoggerFactory().get_logger(__class__.__name__)
-        self.candle_repository = self.container.get(CandleRepository)
+        self.candle_repository = self.container.get(ICandleRepository)
 
     def test_find_all_by_ticker(self):
         ticker = "BTC/KRW"
