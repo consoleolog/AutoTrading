@@ -104,7 +104,7 @@ class TradingService(ITradingService):
         if balance == 0:
             peekout = data_utils.peekout(data, mode)
             result["peekout"] = peekout
-            if peekout and krw > 8000:
+            if peekout and krw > 8000 and mode == "buy":
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
                 order = self.save_order_history(candle, response)
                 result["order"] = order.order_id
@@ -113,7 +113,7 @@ class TradingService(ITradingService):
             profit = self.calculate_profit(ticker)
             result["peekout"] = peekout
             result["profit"] = profit
-            if peekout and profit > 0.1:
+            if peekout and profit > 0.1 and mode == "sell":
                 response = exchange_utils.create_sell_order(ticker, balance)
                 order = self.save_order_history(candle, response)
                 result["order"] = order.order_id
