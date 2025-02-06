@@ -96,6 +96,18 @@ def bullish(data: DataFrame):
             low.isin([MACD.LOW_BULLISH]).any()
     )
 
+def bearish(data: DataFrame):
+    up, mid, low = (
+        data[MACD.UP_CROSSOVER].iloc[-5:],
+        data[MACD.MID_CROSSOVER].iloc[-5:],
+        data[MACD.LOW_CROSSOVER].iloc[-5:]
+    )
+    return (
+        up.isin([MACD.UP_BEARISH]).any() and
+        mid.isin([MACD.MID_BEARISH]).any() and
+        low.isin([MACD.LOW_BEARISH]).any()
+    )
+
 def cross_signal(data: DataFrame):
     up_crossover, mid_crossover, low_crossover = (
         data[MACD.UP_CROSSOVER].iloc[-4:],
