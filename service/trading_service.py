@@ -102,14 +102,14 @@ class TradingService(ITradingService):
         krw = exchange_utils.get_krw()
         balance = exchange_utils.get_balance(ticker)
         if balance == 0:
-            peekout = data_utils.peekout(data, "buy")
+            peekout = data_utils.peekout(data, mode)
             result["peekout"] = peekout
             if peekout and krw > 8000:
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
                 order = self.save_order_history(candle, response)
                 result["order"] = order.order_id
         else:
-            peekout = data_utils.peekout(data, "sell")
+            peekout = data_utils.peekout(data, mode)
             profit = self.calculate_profit(ticker)
             result["peekout"] = peekout
             result["profit"] = profit
