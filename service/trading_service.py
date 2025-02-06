@@ -110,8 +110,10 @@ class TradingService(ITradingService):
                 result["order"] = order.order_id
         else:
             peekout = data_utils.peekout(data, "sell")
+            profit = self.calculate_profit(ticker)
             result["peekout"] = peekout
-            if peekout:
+            result["profit"] = profit
+            if peekout and profit > 0.1:
                 response = exchange_utils.create_sell_order(ticker, balance)
                 order = self.save_order_history(candle, response)
                 result["order"] = order.order_id
