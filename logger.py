@@ -71,7 +71,7 @@ class LoggerFactory:
 
         if log_file is None:
             log_file = f"{name}.log"
-        log_file_path = f"{cls.LOG_FOLDER}/{log_file}.log"
+        log_file_path = f"{cls.LOG_FOLDER}/{log_file}"
 
         file_handler = RotatingFileHandler(
             filename=log_file_path,
