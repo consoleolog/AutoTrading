@@ -75,7 +75,8 @@ class CandleRepository(ICandleRepository):
                C.MACD_UP_GRADIENT,
                C.MACD_MID_GRADIENT,
                C.MACD_LOW_GRADIENT
-        FROM public.get_candles_by_ticker(%(ticker)s) AS C;
+        FROM public.get_candles_by_ticker(%(ticker)s) AS C
+        ORDER BY C.CREATED_AT;
         """
         params = {"ticker": ticker}
         return pd.read_sql(sql, self.engine, params=params)
@@ -99,7 +100,8 @@ class CandleRepository(ICandleRepository):
                          C.MACD_UP_GRADIENT,
                          C.MACD_MID_GRADIENT,
                          C.MACD_LOW_GRADIENT
-               FROM public.get_candles_by_ticker_and_timeframe(%(ticker)s, %(timeframe)s) AS C;"""
+               FROM public.get_candles_by_ticker_and_timeframe(%(ticker)s, %(timeframe)s) AS C
+               ORDER BY C.CREATED_AT;"""
         params = {"ticker": ticker, "timeframe": timeframe}
         return pd.read_sql(sql, self.engine, params=params)
 

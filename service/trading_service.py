@@ -54,7 +54,7 @@ class TradingService(ITradingService):
             "BSV/KRW": 0.1,
             "YFI/KRW": 0.0006,
             "BNB/KRW": 0.007,
-            "COMP/KRW": 0.08,
+            "COMP/KRW": 0.09,
         }
         self.candle_repository = candle_repository
         self.order_repository = order_repository
@@ -94,30 +94,32 @@ class TradingService(ITradingService):
         result = {"ticker": ticker}
         candles = exchange_utils.get_candles(ticker, timeframe)
         data = data_utils.create_sub_data(candles)
-        bullish = data_utils.bullish(data)
         mode, stage = data_utils.select_mode(data)
-        result["mode"] = mode
-        result["stage"] = stage
-        result["bullish"] = bullish
         candle = self.save_candle_data(ticker, timeframe, data, stage)
         krw = exchange_utils.get_krw()
         balance = exchange_utils.get_balance(ticker)
-        if balance == 0:
-            peekout = data_utils.peekout(data, "buy")
-            result["peekout"] = peekout
-            if peekout and krw > 8000 and bullish and mode == "buy":
+
+        # Check Peekout of Histogram
+        peekout = data_utils.peekout(data, mode)
+
+        # BUY
+        if balance == 0 and mode == "buy" and peekout and krw > 8000:
+            # Check Cross Signal
+            bullish = True if data[MACD.UP_CROSSOVER].iloc[-1] == MACD.UP_BULLISH else False
+            result["result"] = f"Bullish: {bullish}"
+            if bullish:
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
-                order = self.save_order_history(candle, response)
-                result["order"] = order.order_id
-        else:
-            peekout = data_utils.peekout(data, "sell")
-            profit = self.calculate_profit(ticker)
-            result["peekout"] = peekout
-            result["profit"] = profit
-            if peekout and profit > 0.1:
+                self.save_order_history(candle, response)
+        # SELL
+        elif balance != 0 and mode == "sell" and peekout:
+            # Check Cross Signal
+            bearish = True if data[MACD.UP_CROSSOVER].iloc[-1] == MACD.UP_BEARISH else False
+            result["result"] = f"Bearish: {bearish}"
+            if bearish:
                 response = exchange_utils.create_sell_order(ticker, balance)
-                order = self.save_order_history(candle, response)
-                result["order"] = order.order_id
+                self.save_order_history(candle, response)
+
+        result["info"] = f"Mode:{mode}\nStage:{stage}"
         return result
 
     def _print_trading_report(self, ticker, data):

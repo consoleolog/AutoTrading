@@ -7,10 +7,11 @@ from utils.exception.data_exception import DataException
 from utils.exception.error_response import ErrorResponse
 
 def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, long_period:int=60)->DataFrame:
+    # EMA
     data[EMA.SHORT] = EMA(data, short_period).val
     data[EMA.MID] = EMA(data, mid_period).val
     data[EMA.LONG] = EMA(data, long_period).val
-
+    # EMA SLOPE
     data[EMA.SHORT_SLOPE] = (data[EMA.SHORT] - data[EMA.SHORT].shift(3) ) / short_period
     data[EMA.MID_SLOPE] = (data[EMA.MID] - data[EMA.MID].shift(3) ) / mid_period
     data[EMA.LONG_SLOPE] = (data[EMA.LONG] - data[EMA.LONG].shift(1) ) / long_period
@@ -18,23 +19,27 @@ def create_sub_data(data: DataFrame, short_period:int=14, mid_period:int=30, lon
     ShortMACD = MACD(data, short_period, mid_period)
     MidMACD = MACD(data, short_period, long_period)
     LowMACD = MACD(data, mid_period, long_period)
-
+    # MACD
     data[MACD.UP] = ShortMACD.val
     data[MACD.MID] = MidMACD.val
     data[MACD.LOW] = LowMACD.val
-
+    # MACD SLOPE
+    data[MACD.UP_SLOPE] = (ShortMACD.val - ShortMACD.val.shift(3)) / short_period
+    data[MACD.MID_SLOPE] = (MidMACD.val - MidMACD.val.shift(3)) / mid_period
+    data[MACD.LOW_SLOPE] = (LowMACD.val - LowMACD.val.shift(3)) / long_period
+    # MACD SIGNAL
     data[MACD.UP_SIGNAL] = ShortMACD.signal_val
     data[MACD.MID_SIGNAL] = MidMACD.signal_val
     data[MACD.LOW_SIGNAL] = LowMACD.signal_val
-
+    # MACD GRADIENT
     data[MACD.UP_GRADIENT] = np.gradient(ShortMACD.val)
     data[MACD.MID_GRADIENT] = np.gradient(MidMACD.val)
     data[MACD.LOW_GRADIENT] = np.gradient(LowMACD.val)
-
+    # MACD HISTOGRAM
     data[MACD.UP_HISTOGRAM] = ShortMACD.histogram_val
     data[MACD.MID_HISTOGRAM] = MidMACD.histogram_val
     data[MACD.LOW_HISTOGRAM] = LowMACD.histogram_val
-
+    # MACD CROSSOVER
     data[MACD.UP_CROSSOVER] = np.where(
         (data[MACD.UP].shift(1) < data[MACD.UP_SIGNAL].shift(1)) & (data[MACD.UP] > data[MACD.UP_SIGNAL]), MACD.UP_BULLISH,
         np.where(
@@ -107,36 +112,56 @@ def bearish(data: DataFrame):
         low.isin([MACD.LOW_BEARISH]).any()
     )
 
-def cross_signal(data: DataFrame):
-    up_crossover, mid_crossover, low_crossover = (
-        data[MACD.UP_CROSSOVER].iloc[-4:],
-        data[MACD.MID_CROSSOVER].iloc[-4:],
-        data[MACD.LOW_CROSSOVER].iloc[-4:],
+def Up(data: DataFrame):
+    up, mid, low = (
+        data[MACD.UP_GRADIENT].iloc[-5:],
+        data[MACD.MID_GRADIENT].iloc[-5:],
+        data[MACD.LOW_GRADIENT].iloc[-5:],
     )
-    if (
-        up_crossover.isin([MACD.UP_BULLISH]).any() and
-        mid_crossover.isin([MACD.MID_BULLISH]).any() and
-        low_crossover.isin([MACD.LOW_BULLISH]).any()
-    ):
-        return MACD.BULLISH
-    if up_crossover.isin([MACD.UP_BEARISH]).any() :
-        return MACD.BEARISH
+    return True if (
+        up.mean() > 0,
+        mid.mean() > 0,
+        low.mean() > 0
+    ) else False
+def Down(data: DataFrame):
+    up, mid, low = (
+       data[MACD.UP_GRADIENT].iloc[-5:],
+       data[MACD.MID_GRADIENT].iloc[-5:],
+       data[MACD.LOW_GRADIENT].iloc[-5:],
+    )
+    return True if (
+        up.mean() < 0,
+        mid.mean() < 0,
+        low.mean() < 0
+    ) else False
 
-def increase(data: DataFrame) -> bool:
-    up_gradient, mid_gradient, low_gradient = data[MACD.UP_GRADIENT], data[MACD.MID_GRADIENT], data[MACD.LOW_GRADIENT]
-    ema_up_slope, ema_mid_slope, ema_long_slope = data[EMA.SHORT_SLOPE], data[EMA.MID_SLOPE], data[EMA.LONG_SLOPE]
-    return all([up_gradient.iloc[-1]  > 0,
-                up_gradient.iloc[-2]  > 0,
-                mid_gradient.iloc[-1] > 0,
-                mid_gradient.iloc[-2] > 0,
-                low_gradient.iloc[-1] > 0,
-                low_gradient.iloc[-2] > 0,
-                ema_up_slope.iloc[-1] > 0,
-                ema_up_slope.iloc[-2] > 0,
-                ema_mid_slope.iloc[-1] > ema_mid_slope.iloc[-2],
-                ema_long_slope.iloc[-1] > ema_long_slope.iloc[-2]])
+def increase(data: DataFrame):
+    (ema_short, ema_mid, ema_long,
+     macd_up, macd_mid, macd_low) = (
+        data[EMA.SHORT_SLOPE].iloc[-5:],
+        data[EMA.MID_SLOPE].iloc[-5:],
+        data[EMA.LONG_SLOPE].iloc[-5:],
+        data[MACD.UP_GRADIENT].iloc[-5:],
+        data[MACD.MID_GRADIENT].iloc[-5:],
+        data[MACD.LOW_GRADIENT].iloc[-5:],
+    )
+    return all([
+        ema_short.mean() > 0,
+        ema_mid.mean() > 0,
+        ema_long.mean() > 0,
+        macd_up.mean() > 0,
+        macd_mid.mean() > 0,
+        macd_low.mean() > 0,
+    ])
 
-def decrease(data: DataFrame) -> bool:
-    ema_up_slope, ema_mid_slope, ema_long_slope = data[EMA.SHORT_SLOPE], data[EMA.MID_SLOPE], data[EMA.LONG_SLOPE]
-    return all([ema_up_slope.iloc[-1] <  ema_up_slope.iloc[-2],
-                ema_mid_slope.iloc[-1] < ema_mid_slope.iloc[-2],])
+def decrease(data: DataFrame):
+    short, mid, long = (
+        data[EMA.SHORT_SLOPE].iloc[-5:],
+        data[EMA.MID_SLOPE].iloc[-5:],
+        data[EMA.LONG_SLOPE].iloc[-5:],
+    )
+    return True if (
+        short.mean() < 0,
+        mid.mean() < 0,
+        long.mean() < 0
+    ) else False
