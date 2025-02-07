@@ -105,7 +105,7 @@ class TradingService(ITradingService):
         # BUY
         if balance == 0 and mode == "buy" and peekout and krw > 8000:
             # Check Cross Signal
-            bullish = True if data[MACD.UP_CROSSOVER].iloc[-1] == MACD.UP_BULLISH else False
+            bullish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BULLISH]).any() else False
             result["result"] = f"Bullish: {bullish}"
             if bullish:
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
@@ -113,7 +113,7 @@ class TradingService(ITradingService):
         # SELL
         elif balance != 0 and mode == "sell" and peekout:
             # Check Cross Signal
-            bearish = True if data[MACD.UP_CROSSOVER].iloc[-1] == MACD.UP_BEARISH else False
+            bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
             result["result"] = f"Bearish: {bearish}"
             if bearish:
                 response = exchange_utils.create_sell_order(ticker, balance)
