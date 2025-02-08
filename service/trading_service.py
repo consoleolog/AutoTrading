@@ -105,27 +105,19 @@ class TradingService(ITradingService):
             peekout = data_utils.peekout(data, mode)
             # Check Cross Signal
             bullish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BULLISH]).any() else False
-            result["result"] = f"Bullish: {bullish}"
+            result["result"] = f"Peekout: {peekout}, Bullish: {bullish}"
             if bullish and mode == "buy" and peekout and krw > 8000:
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
                 self.save_order_history(candle, response)
         # SELL
         else:
-            if mode == "sell":
-                peekout = data_utils.peekout(data, mode)
-                # Check Cross Signal
-                bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
-                if bearish and peekout:
-                    response = exchange_utils.create_sell_order(ticker, balance)
-                    result["result"] = self.save_order_history(candle, response).order_id
-            else:
-                peekout = data_utils.peekout(data, "sell")
-                bearish = True if data[MACD.LOW_CROSSOVER].iloc[-2:].isin([MACD.LOW_BEARISH]).any() else False
-                if bearish and peekout:
-                    response = exchange_utils.create_sell_order(ticker, self.price_keys[ticker])
-                    result["result"] = self.save_order_history(candle, response).order_id
-
-        result["info"] = f"Mode: {mode} Stage: {stage}"
+            peekout = data_utils.peekout(data, "sell")
+            bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
+            if bearish and peekout:
+                response = exchange_utils.create_sell_order(ticker, self.price_keys[ticker])
+                result["order"] = self.save_order_history(candle, response).order_id
+            result = f"Peekout: {peekout}, Bearish: {bearish}"
+        result["info"] = f"Mode: {mode}, Stage: {stage}"
         return result
 
     def _print_trading_report(self, ticker, data):
