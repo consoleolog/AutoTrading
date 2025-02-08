@@ -126,7 +126,7 @@ class TradingService(ITradingService):
                     response = exchange_utils.create_sell_order(ticker, self.price_keys[ticker])
                     result["order"] = self.save_order_history(candle, response).order_id
                 result["result"] = f"Peekout: {peekout}, Bearish: {bearish}"
-        result["info"] = f"Mode: {mode}, Stage: {stage}"
+        result["info"] = f"Mode: {mode}, Stage: {str(stage)}"
         return result
 
     def _print_trading_report(self, ticker, data):
