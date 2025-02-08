@@ -99,27 +99,36 @@ class TradingService(ITradingService):
         krw = exchange_utils.get_krw()
         balance = exchange_utils.get_balance(ticker)
 
-        # Check Peekout of Histogram
-        peekout = data_utils.peekout(data, mode)
+
 
         # BUY
-        if balance == 0 and mode == "buy" and peekout and krw > 8000:
+        if balance == 0 and mode == "buy" and krw > 8000:
+            # Check Peekout of Histogram
+            peekout = data_utils.peekout(data, mode)
             # Check Cross Signal
             bullish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BULLISH]).any() else False
             result["result"] = f"Bullish: {bullish}"
-            if bullish:
+            if bullish and peekout:
                 response = exchange_utils.create_buy_order(ticker, self.price_keys[ticker])
                 self.save_order_history(candle, response)
         # SELL
-        elif balance != 0 and mode == "sell" and peekout:
-            # Check Cross Signal
-            bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
-            result["result"] = f"Bearish: {bearish}"
-            if bearish:
-                response = exchange_utils.create_sell_order(ticker, balance)
-                self.save_order_history(candle, response)
+        elif balance != 0:
+            if mode == "sell":
+                peekout = data_utils.peekout(data, mode)
+                # Check Cross Signal
+                bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
+                result["result"] = f"Bearish: {bearish}"
+                if bearish and peekout:
+                    response = exchange_utils.create_sell_order(ticker, balance)
+                    self.save_order_history(candle, response)
+            else:
+                peekout = data_utils.peekout(data, "sell")
+                bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.LOW_BEARISH]).any() else False
+                if bearish and peekout:
+                    response = exchange_utils.create_sell_order(ticker, self.price_keys[ticker])
+                    self.save_order_history(candle, response)
 
-        result["info"] = f"Mode:{mode} Stage:{stage} Peekout: {peekout}"
+        result["info"] = f"Mode: {mode} Stage: {stage}"
         return result
 
     def _print_trading_report(self, ticker, data):
