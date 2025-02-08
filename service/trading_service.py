@@ -111,12 +111,21 @@ class TradingService(ITradingService):
                 self.save_order_history(candle, response)
         # SELL
         else:
-            peekout = data_utils.peekout(data, "sell")
-            bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
-            if bearish and peekout:
-                response = exchange_utils.create_sell_order(ticker, self.price_keys[ticker])
-                result["order"] = self.save_order_history(candle, response).order_id
-            result = f"Peekout: {peekout}, Bearish: {bearish}"
+            if mode == "sell":
+                peekout = data_utils.peekout(data, mode)
+                # Check Cross Signal
+                bearish = True if data[MACD.UP_CROSSOVER].iloc[-2:].isin([MACD.UP_BEARISH]).any() else False
+                if bearish and peekout:
+                    response = exchange_utils.create_sell_order(ticker, balance)
+                    result["order"] = self.save_order_history(candle, response).order_id
+                result["result"] = f"Peekout: {peekout}, Bearish: {bearish}"
+            else:
+                peekout = data_utils.peekout(data, "sell")
+                bearish = True if data[MACD.LOW_CROSSOVER].iloc[-2:].isin([MACD.LOW_BEARISH]).any() else False
+                if bearish and peekout:
+                    response = exchange_utils.create_sell_order(ticker, self.price_keys[ticker])
+                    result["order"] = self.save_order_history(candle, response).order_id
+                result["result"] = f"Peekout: {peekout}, Bearish: {bearish}"
         result["info"] = f"Mode: {mode}, Stage: {stage}"
         return result
 
