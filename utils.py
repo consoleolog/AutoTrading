@@ -45,6 +45,9 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     stochastic = Stochastic(data)
     data[Stochastic.D_FAST] = stochastic.d_fast
     data[Stochastic.D_SLOW] = stochastic.d_slow
+    data[Stochastic.BULLISH] = stochastic.bullish_val
+    data[Stochastic.BEARISH] = stochastic.bearish_val
+
 
     # RSI
     rsi = RSI(data, 9)
@@ -74,18 +77,14 @@ def peekout(data, mode):
     else:
         raise ValueError("Unexpected Mode" + mode)
 
-def bullish(data):
-    up, mid, low, rsi = (
-        data[MACD.UP_BULLISH].iloc[-5:],
-        data[MACD.MID_BULLISH].iloc[-5:],
-        data[MACD.LOW_BULLISH].iloc[-5:],
-        data[RSI.BULLISH].iloc[-5:],
+def macd_bullish(data):
+    up, mid = (
+        data[MACD.UP_BULLISH].iloc[-4:],
+        data[MACD.MID_BULLISH].iloc[-4:],
     )
     return True if (
         up.isin([True]).any() and
-        mid.isin([True]).any() and
-        low.isin([True]).any() and
-        rsi.isin([True]).any()
+        mid.isin([True]).any()
     ) else False
 
 def bearish(data):

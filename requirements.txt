@@ -13,3 +13,4 @@ matplotlib~=3.9.2
 ccxt~=4.4.42
 numpy~=2.0.1
 mplfinance~=0.12.10b0
+backtesting~=0.6.1

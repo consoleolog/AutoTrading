@@ -1,10 +1,12 @@
 import abc
+import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 import exchange
 import utils
+from dto.stochastic import Stochastic
 from logger import LoggerFactory
 from constant.stage import Stage
 from constant.timeframe import TimeFrame
@@ -95,17 +97,36 @@ class TradingService(ITradingService):
         # BUY
         if balance == 0:
             if stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
-                peekout = utils.peekout(data, "buy")
-                rsi_val = data[RSI.RSI].iloc[-1]
-                result["info"] = f"[Peekout]: {peekout} | [RSI]: {rsi_val}"
-                if peekout and rsi_val <= 30 and krw > 8000:
+                position = open(f"{os.getcwd()}/{ticker}_buy_position.txt", "r")
+                fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
+                if position.read() == "none" and fast.iloc[-1] < 25 and  slow.iloc[-1] < 25:
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write("stoch_check")
+                rsi = data[RSI.RSI]
+                if position.read() == "stoch_check" and 45 <= rsi.iloc[-1] <= 55 :
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write("rsi_check")
+                else:
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write("none")
+                macd_bullish = utils.macd_bullish(data)
+                if position.read() == "rsi_check" and macd_bullish:
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write("macd_check")
+                else:
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write("none")
+                if position.read() == "macd_check" and fast.iloc[-1] < 60:
                     exchange.create_buy_order(ticker, self.price_keys[ticker])
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write(data["close"].iloc[-1])
+                else:
+                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                        f.write("none")
         # SELL
         else:
-            if stage == Stage.STABLE_INCREASE or stage == Stage.END_OF_INCREASE or stage == Stage.START_OF_DECREASE:
-                peekout, rsi_val = utils.peekout(data, "sell"), data[RSI.RSI].iloc[-1]
-                result["info"] = f"[Peekout]: {peekout} | [RSI]: {rsi_val}]"
-                if peekout and rsi_val >= 70:
-                    exchange.create_sell_order(ticker, balance)
+            low_price = data["close"].iloc[:-10].min()
+            profit_price = low_price * 1.5
+
 
         return result
