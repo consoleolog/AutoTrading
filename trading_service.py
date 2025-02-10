@@ -43,8 +43,8 @@ class TradingService(ITradingService):
         LoggerFactory.set_stream_level(LoggerFactory.INFO)
         self.ticker_list = ticker_list
         self.price_keys = {
-            "BTC/KRW": 0.0001,
-            "ETH/KRW": 0.0015,
+            "BTC/KRW": 0.0002,
+            "ETH/KRW": 0.0030,
             "BCH/KRW": 0.011,
             "AAVE/KRW": 0.015,
             "SOL/KRW": 0.02,
