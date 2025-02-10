@@ -52,9 +52,9 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
 
 def peekout(data, mode):
     up_hist, mid_hist, low_hist = (
-         data[MACD.UP_HIST].iloc[-5:],
-        data[MACD.MID_HIST].iloc[-5:],
-        data[MACD.LOW_HIST].iloc[-5:],
+         data[MACD.UP_HIST].iloc[-8:],
+        data[MACD.MID_HIST].iloc[-8:],
+        data[MACD.LOW_HIST].iloc[-8:],
     )
     if mode == "buy":
         return all([up_hist.iloc[-1] > up_hist.min(),
@@ -65,7 +65,7 @@ def peekout(data, mode):
                     mid_hist.iloc[-1] < mid_hist.max(),
                     low_hist.iloc[-1] < low_hist.max()])
     else:
-        raise ValueError("UnExcepted Mode" + mode)
+        raise ValueError("Unexpected Mode" + mode)
 
 def bullish(data):
     up, mid, low, rsi = (

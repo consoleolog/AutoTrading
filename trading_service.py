@@ -87,37 +87,25 @@ class TradingService(ITradingService):
             result = [f.result() for f in futures]
         self.logger.info(result)
 
-    def buy_condition(self, data):
-        rsi = data[RSI.RSI]
-        peekout, bullish = utils.peekout(data, "buy"), utils.bullish(data)
-        return True if peekout and bullish and rsi.iloc[-2] <= 30 <= rsi.iloc[-1] else False
-    def all_sell_condition(self, data):
-        rsi = data[RSI.RSI]
-        peekout, bearish = utils.peekout(data, "sell"), utils.bearish(data)
-        return True if peekout and bearish and rsi.iloc[-1] >= 70 else False
-    def half_sell_condition(self, data):
-        rsi = data[RSI.RSI]
-        peekout = utils.peekout(data, "sell")
-        return True if peekout and rsi.iloc[-1] >= 70 else False
-
     def auto_trading(self, ticker:str, timeframe: TimeFrame):
+        result = {"ticker": ticker}
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
         krw = exchange.get_krw()
         balance = exchange.get_balance(ticker)
-
         # BUY
         if balance == 0:
-            candle = self.save_candle_data(ticker, timeframe, data, stage)
-            if self.buy_condition(data) and krw > 8000 and (stage == 4 or stage == 5 or stage == 6):
-                res = exchange.create_buy_order(ticker, self.price_keys[ticker])
-                self.save_order_history(candle, res)
+            if stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
+                peekout = utils.peekout(data, "buy")
+                rsi_val = data[RSI.RSI].iloc[-1]
+                result["info"] = f"[Peekout]: {peekout} | [RSI]: {rsi_val}"
+                if peekout and rsi_val <= 30 and krw > 8000:
+                    exchange.create_buy_order(ticker, self.price_keys[ticker])
         # SELL
         else:
-            if self.half_sell_condition(data) and ( stage == 1 or stage == 2 or stage == 3 ):
-                candle = self.save_candle_data(ticker, timeframe, data, stage)
-                res = exchange.create_sell_order(ticker, balance / 2)
-                self.save_order_history(candle, res)
-            elif self.all_sell_condition(data) and ( stage == 1 or stage == 2 or stage == 3 ):
-                candle = self.save_candle_data(ticker, timeframe, data, stage)
-                res = exchange.create_buy_order(ticker, balance)
-                self.save_order_history(candle, res)
+            if stage == Stage.STABLE_INCREASE or stage == Stage.END_OF_INCREASE or stage == Stage.START_OF_DECREASE:
+                peekout, rsi_val = utils.peekout(data, "sell"), data[RSI.RSI].iloc[-1]
+                result["info"] = f"[Peekout]: {peekout} | [RSI]: {rsi_val}]"
+                if peekout and rsi_val >= 70:
+                    exchange.create_sell_order(ticker, balance)
+
+        return result

@@ -10,7 +10,7 @@ class RSI:
     BULLISH = "RSI_BULLISH"
     BEARISH = "RSI_BEARISH"
 
-    def __init__(self, data: DataFrame, period=14):
+    def __init__(self, data: DataFrame, period=14, period_sigal = 9):
         delta = data["close"].diff()
         U = delta.clip(lower=0)  # 상승한 날은 그대로, 나머지는 0
         D = -delta.clip(upper=0)  # 하락한 날은 양수로 변환, 나머지는 0
@@ -23,7 +23,7 @@ class RSI:
 
         rsi = 100 - (100 / (1 + rs))
         self.val = rsi
-        self.signal_val = EMA(self.val, period).val
+        self.signal_val = EMA(self.val, period_sigal).val
         self.histogram_val = self.val - self.signal_val
         self.bullish_val = ((self.val.shift(1) < self.signal_val.shift(1)) & (self.val > self.signal_val))
         self.bearish_val = ((self.val.shift(1) > self.signal_val.shift(1)) & (self.val < self.signal_val))
