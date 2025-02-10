@@ -89,44 +89,90 @@ class TradingService(ITradingService):
             result = [f.result() for f in futures]
         self.logger.info(result)
 
-    def auto_trading(self, ticker:str, timeframe: TimeFrame):
+    import os
+
+    def auto_trading(self, ticker: str, timeframe: TimeFrame):
         result = {"ticker": ticker}
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
-        krw = exchange.get_krw()
+        filename = ticker.split("/")[0]
         balance = exchange.get_balance(ticker)
+
         # BUY
         if balance == 0:
-            if stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
-                position = open(f"{os.getcwd()}/{ticker}_buy_position.txt", "r")
+            if stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
+                position_path = f"{os.getcwd()}/{filename}_buy_position.txt"
+                with open(position_path, "r") as position:
+                    position_status = position.read().strip()
+
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
-                if position.read() == "none" and fast.iloc[-1] < 25 and  slow.iloc[-1] < 25:
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                if position_status == "none" and fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
+                    with open(position_path, "w") as f:
                         f.write("stoch_check")
+
                 rsi = data[RSI.RSI]
-                if position.read() == "stoch_check" and 45 <= rsi.iloc[-1] <= 55 :
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                if position_status == "stoch_check" and 45 <= rsi.iloc[-1] <= 55:
+                    with open(position_path, "w") as f:
                         f.write("rsi_check")
-                else:
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
-                        f.write("none")
+
                 macd_bullish = utils.macd_bullish(data)
-                if position.read() == "rsi_check" and macd_bullish:
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                if position_status == "rsi_check" and macd_bullish:
+                    with open(position_path, "w") as f:
                         f.write("macd_check")
-                else:
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
-                        f.write("none")
-                if position.read() == "macd_check" and fast.iloc[-1] < 60:
+
+                if position_status == "macd_check" and fast.iloc[-1] < 70:
                     exchange.create_buy_order(ticker, self.price_keys[ticker])
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
-                        f.write(data["close"].iloc[-1])
+                    with open(position_path, "w") as f:
+                        f.write(str(data["close"].iloc[-1]))  # 매수가 저장
                 else:
-                    with open(f"{os.getcwd()}/{ticker}_buy_position.txt", "w") as f:
+                    with open(position_path, "w") as f:
                         f.write("none")
+
         # SELL
         else:
-            low_price = data["close"].iloc[:-10].min()
-            profit_price = low_price * 1.5
+            position_path = f"{os.getcwd()}/{filename}_sell_position.txt"
+            with open(position_path, "r") as position:
+                position_status = position.read().strip()
 
+            with open(f"{os.getcwd()}/{filename}_buy_position.txt", "r") as f:
+                entry_price = f.read().strip()
+
+            try:
+                entry_price = float(entry_price)
+            except ValueError:
+                entry_price = None
+
+            if entry_price:
+                stop_loss = entry_price * 0.95  # 예: 5% 손절
+                take_profit = entry_price + (entry_price - stop_loss) * 1.5  # 손절폭 * 1.5만큼 익절 설정
+
+                if data["close"].iloc[-1] > take_profit:
+                    exchange.create_sell_order(ticker, balance)
+                    with open(position_path, "w") as f:
+                        f.write("none")
+                if position_status == "sell":
+                    sell_price = min(data["close"].iloc[-10:].max(), take_profit)  # 익절 구간 적용
+                    if data["close"].iloc[-1] > sell_price:
+                        exchange.create_sell_order(ticker, balance)
+                        with open(position_path, "w") as f:
+                            f.write("none")
+
+            fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
+            if position_status == "none" and fast.iloc[-1] > 70 and slow.iloc[-1] > 70:
+                with open(position_path, "w") as f:
+                    f.write("stoch_check")
+
+            rsi = data[RSI.RSI]
+            if position_status == "stoch_check" and 45 <= rsi.iloc[-1] <= 70:
+                with open(position_path, "w") as f:
+                    f.write("rsi_check")
+
+            macd_bearish = utils.macd_bearish(data)
+            if position_status == "rsi_check" and macd_bearish:
+                with open(position_path, "w") as f:
+                    f.write("macd_check")
+
+            if position_status == "macd_check" and fast.iloc[-1] > 30:
+                with open(position_path, "w") as f:
+                    f.write("sell")
 
         return result

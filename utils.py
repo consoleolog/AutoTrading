@@ -1,9 +1,18 @@
+import os
+
 import exchange
 from dto.ema import EMA
 from dto.macd import MACD
 from dto.rsi import RSI
 from dto.stochastic import Stochastic
 
+def init_file(ticker_list):
+    for ticker in ticker_list:
+        filename = ticker.split('/')[0]
+        with open(f"{os.getcwd()}/{filename}_buy_position.txt", "w") as f:
+            f.write("none")
+        with open(f"{os.getcwd()}/{filename}_sell_position.txt", "w") as f:
+            f.write("none")
 
 def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 40):
     data = exchange.get_candles(ticker, timeframe)
@@ -42,7 +51,7 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[MACD.LOW_BEARISH] = LowMACD.bearish_val
 
     # STOCHASTIC
-    stochastic = Stochastic(data)
+    stochastic = Stochastic(data, 12, 3, 3)
     data[Stochastic.D_FAST] = stochastic.d_fast
     data[Stochastic.D_SLOW] = stochastic.d_slow
     data[Stochastic.BULLISH] = stochastic.bullish_val
@@ -50,7 +59,7 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
 
 
     # RSI
-    rsi = RSI(data, 9)
+    rsi = RSI(data, 14)
     data[RSI.RSI] = rsi.val
     data[RSI.SIG] = rsi.signal_val
     data[RSI.BULLISH] = rsi.bullish_val
@@ -79,8 +88,18 @@ def peekout(data, mode):
 
 def macd_bullish(data):
     up, mid = (
-        data[MACD.UP_BULLISH].iloc[-4:],
-        data[MACD.MID_BULLISH].iloc[-4:],
+        data[MACD.UP_BULLISH].iloc[-3:],
+        data[MACD.MID_BULLISH].iloc[-3:],
+    )
+    return True if (
+        up.isin([True]).any() and
+        mid.isin([True]).any()
+    ) else False
+
+def macd_bearish(data):
+    up, mid = (
+        data[MACD.UP_BEARISH].iloc[-3:],
+        data[MACD.MID_BEARISH].iloc[-3:],
     )
     return True if (
         up.isin([True]).any() and

@@ -14,6 +14,17 @@ T = TypeVar('T')
 class IocContainer:
     def __init__(self):
         self.obj_map = {}
+        self.ticker_list = [
+            "BTC/KRW",
+            "ETH/KRW",
+            # "BCH/KRW",
+            # "AAVE/KRW",
+            # "SOL/KRW",
+            # "BSV/KRW",
+            # "YFI/KRW",
+            # "BNB/KRW",
+            # "COMP/KRW"
+        ]
 
     def register(self, obj: Any):
         self.obj_map[type(obj)] = obj
@@ -32,17 +43,7 @@ class IocContainer:
         return obj
 
     def compose(self):
-        ticker_list = [
-            "BTC/KRW",
-            "ETH/KRW",
-            # "BCH/KRW",
-            # "AAVE/KRW",
-            # "SOL/KRW",
-            # "BSV/KRW",
-            # "YFI/KRW",
-            # "BNB/KRW",
-            # "COMP/KRW"
-        ]
+
         connection = psycopg2.connect(
             host=database.host,
             database=database.database,
@@ -54,5 +55,5 @@ class IocContainer:
         engine = create_engine(db_url)
         self.register(CandleRepository(connection, engine))
         self.register(OrderRepository(connection, engine))
-        self.register(TradingService(ticker_list, self.get(ICandleRepository), self.get(IOrderRepository)))
+        self.register(TradingService(self.ticker_list, self.get(ICandleRepository), self.get(IOrderRepository)))
         self.register(SchedulerConfig(self.get(ITradingService)))
