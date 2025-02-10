@@ -2,7 +2,7 @@ import abc
 import pandas as pd
 import psycopg2
 from logger import LoggerFactory
-from model.entity.order import Order
+from entity.order import Order
 
 class IOrderRepository(abc.ABC):
     @abc.abstractmethod

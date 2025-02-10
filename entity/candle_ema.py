@@ -1,6 +1,6 @@
 from pandas import DataFrame
-from model.const.stage import Stage
-from model.dto.ema import EMA
+from constant.stage import Stage
+from dto.ema import EMA
 
 class CandleEMA:
     def __init__(

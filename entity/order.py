@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from model.entity.candle import Candle
+from entity.candle import Candle
 
 
 class Order:

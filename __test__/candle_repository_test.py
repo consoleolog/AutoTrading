@@ -1,7 +1,7 @@
 import unittest
 from ioc_container import IocContainer
 from logger import LoggerFactory
-from model.const.timeframe import TimeFrame
+from constant import TimeFrame
 from repository.candle_repository import ICandleRepository
 
 class CandleRepositoryTest(unittest.TestCase):

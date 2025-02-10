@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from config.scheduler_config import ISchedulerConfig
+from scheduler import ISchedulerConfig
 from ioc_container import IocContainer
 from logger import LoggerFactory
 

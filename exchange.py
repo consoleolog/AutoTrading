@@ -2,8 +2,8 @@ import os
 import ccxt
 import pandas as pd
 from dotenv import load_dotenv
-from model.const.timeframe import TimeFrame
-from model.dto.ticker_info import TickerInfo
+from constant.timeframe import TimeFrame
+from dto.ticker_info import TickerInfo
 load_dotenv()
 apiUrl = 'https://api.bithumb.com'
 accessKey = os.getenv("ACCESS_KEY")

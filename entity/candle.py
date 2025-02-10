@@ -1,5 +1,5 @@
 from datetime import datetime
-from model.const.timeframe import TimeFrame
+from constant.timeframe import TimeFrame
 
 class Candle:
     def __init__(

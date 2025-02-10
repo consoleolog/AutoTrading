@@ -1,4 +1,4 @@
-from model.dto.macd import MACD
+from dto.macd import MACD
 
 
 class CandleMACD:

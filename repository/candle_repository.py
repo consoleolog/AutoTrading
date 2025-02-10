@@ -2,10 +2,10 @@ import abc
 import pandas as pd
 import psycopg2
 from logger import LoggerFactory
-from model.const.timeframe import TimeFrame
-from model.entity.candle import Candle
-from model.entity.candle_ema import CandleEMA
-from model.entity.candle_macd import CandleMACD
+from constant.timeframe import TimeFrame
+from entity.candle import Candle
+from entity.candle_ema import CandleEMA
+from entity.candle_macd import CandleMACD
 
 class ICandleRepository(abc.ABC):
     @abc.abstractmethod
