@@ -1,6 +1,7 @@
 import unittest
 
 import utils
+from dto.stochastic import Stochastic
 from logger import LoggerFactory
 from constant.timeframe import TimeFrame
 from dto.rsi import RSI
@@ -46,3 +47,14 @@ class StrategyTest(unittest.TestCase):
         #     self.logger.debug(bearish)
         #     if peekout and rsi >= 70:
         #         self.logger.debug("sell")
+
+    def testStochastic(self):
+        ticker = "BTC/KRW"
+        timeframe = TimeFrame.MINUTE_3
+        stage, data = utils.get_data(ticker, timeframe,5,8,13)
+
+        d_fast = data[Stochastic.D_FAST].iloc[-1]
+        d_slow = data[Stochastic.D_SLOW].iloc[-1]
+
+        self.logger.debug(d_fast)
+        self.logger.debug(d_slow)

@@ -2,6 +2,8 @@ import exchange
 from dto.ema import EMA
 from dto.macd import MACD
 from dto.rsi import RSI
+from dto.stochastic import Stochastic
+
 
 def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 40):
     data = exchange.get_candles(ticker, timeframe)
@@ -38,6 +40,11 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[MACD.UP_BEARISH] = ShortMACD.bearish_val
     data[MACD.MID_BEARISH] = MidMACD.bearish_val
     data[MACD.LOW_BEARISH] = LowMACD.bearish_val
+
+    # STOCHASTIC
+    stochastic = Stochastic(data)
+    data[Stochastic.D_FAST] = stochastic.d_fast
+    data[Stochastic.D_SLOW] = stochastic.d_slow
 
     # RSI
     rsi = RSI(data, 9)
