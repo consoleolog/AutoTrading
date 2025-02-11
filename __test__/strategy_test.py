@@ -14,11 +14,13 @@ class StrategyTest(unittest.TestCase):
         LoggerFactory.set_stream_level(LoggerFactory.DEBUG)
 
     def testGetData(self):
-        ticker = "BTC/KRW"
+        ticker = "ETH/KRW"
         timeframe = TimeFrame.MINUTE_3
         stage, data = utils.get_data(ticker, timeframe)
         self.logger.debug(stage)
         self.logger.debug(data)
+        self.logger.debug(data[Stochastic.D_SLOW].iloc[-1])
+        self.logger.debug(data[Stochastic.D_FAST].iloc[-1])
 
     def test_trading(self):
         ticker = "BTC/KRW"
@@ -27,8 +29,7 @@ class StrategyTest(unittest.TestCase):
         rsi = data[RSI.RSI]
         self.logger.debug(stage)
         self.logger.debug(rsi.iloc[-1])
-        peekout, rsi_cross = utils.peekout(data, "buy"), True if data[RSI.BULLISH].iloc[-2:].isin(
-            [True]).any() else False
+        peekout, rsi_cross = utils.peekout(data, "buy"), True if data[RSI.BULLISH].iloc[-2:].isin([True]).any() else False
 
         self.logger.debug(peekout)
         self.logger.debug(rsi_cross)

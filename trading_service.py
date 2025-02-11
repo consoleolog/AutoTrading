@@ -90,9 +90,7 @@ class TradingService(ITradingService):
         self.logger.info(result)
 
     def auto_trading(self, ticker: str, timeframe: TimeFrame):
-        result = {"ticker": ticker}
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
-        filename = ticker.split("/")[0]
         balance = exchange.get_balance(ticker)
         with open(f"{os.getcwd()}/info.plk", "rb") as f:
             info = pickle.load(f)
@@ -111,17 +109,18 @@ class TradingService(ITradingService):
                 if info[ticker]["status"] == "macd_check" and fast.iloc[-1] < 70:
                     exchange.create_buy_order(ticker, self.price_keys[ticker])
                     utils.update_info(ticker, "short", "none", float(data["close"].iloc[-1]))
+                else:
+                    utils.update_info(ticker, "", "none")
         # SELL
         else:
             if info[ticker]["position"] == "short":
                 entry_price = float(info[ticker]["price"])
-                stop_loss = entry_price * 0.95
-                take_profit = entry_price + (entry_price - stop_loss) * 1.5
+                take_profit = entry_price * 1.5
                 if data["close"].iloc[-1] > take_profit:
                     exchange.create_sell_order(ticker, balance)
                     utils.update_info(ticker, "long", "none")
-                sell_price = min(data["close"].iloc[-10:].max(), take_profit)  # 익절 구간 적용
-                if info[ticker]["status"] == "macd_check" and data["close"].iloc[-1] > sell_price:
+
+                if info[ticker]["status"] == "macd_check":
                     exchange.create_sell_order(ticker, balance)
                     utils.update_info(ticker, "long", "none")
 
@@ -136,5 +135,5 @@ class TradingService(ITradingService):
                 macd_bearish = utils.macd_bearish(data)
                 if info[ticker]["status"] == "rsi_check" and macd_bearish:
                     utils.update_info(ticker, "", "macd_check")
-
-        return info
+        info[ticker]["ticker"] = ticker
+        return info[ticker]

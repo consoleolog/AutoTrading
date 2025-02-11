@@ -13,9 +13,3 @@ services:
     expose:
       - "3001"
     command: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "3001"]
-    volumes:
-      - AutoTradingLog:/app/log
-
-volumes:
-  AutoTradingLog:
-    external: true
