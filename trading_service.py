@@ -106,10 +106,16 @@ class TradingService(ITradingService):
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                if info[ticker]["stoch"] and rsi.iloc[-1] > 50:
+                if info[ticker]["stoch"] and 60 >= rsi.iloc[-1] >= 50:
                     info[ticker]["rsi"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
+                else:
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                        pickle.dump(info, f)
+                    exchange.create_buy_order(ticker, self.price_keys[ticker])
 
                 macd_bullish = True if data[MACD.BULLISH].iloc[:-2].isin([True]).any() else False
                 if info[ticker]["stoch"] and macd_bullish:
