@@ -94,7 +94,7 @@ class TradingService(ITradingService):
         balance = exchange.get_balance(ticker)
         with open(f"{os.getcwd()}/info.plk", "rb") as f:
             info = pickle.load(f)
-            
+
         # BUY
         if balance == 0:
             rsi = data[RSI.RSI]
@@ -145,6 +145,16 @@ class TradingService(ITradingService):
                     exchange.create_sell_order(ticker, balance)
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
+
+                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    info[ticker]["position"] = "long"
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["rsi"] = False
+                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                        pickle.dump(info, f)
+                    exchange.create_sell_order(ticker, balance)
+
                 if info[ticker]["stoch"] == False and fast.iloc[-1] > 70 and slow.iloc[-1] > 70:
                     info[ticker]["stoch"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
