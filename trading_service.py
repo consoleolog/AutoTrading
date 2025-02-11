@@ -1,10 +1,12 @@
 import abc
+import os
 import uuid
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-
+import pickle
 import exchange
 import utils
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from dto.stochastic import Stochastic
 from logger import LoggerFactory
 from constant.stage import Stage
 from constant.timeframe import TimeFrame
@@ -87,25 +89,52 @@ class TradingService(ITradingService):
             result = [f.result() for f in futures]
         self.logger.info(result)
 
-    def auto_trading(self, ticker:str, timeframe: TimeFrame):
+    def auto_trading(self, ticker: str, timeframe: TimeFrame):
         result = {"ticker": ticker}
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
-        krw = exchange.get_krw()
+        filename = ticker.split("/")[0]
         balance = exchange.get_balance(ticker)
+        with open(f"{os.getcwd()}/info.plk", "rb") as f:
+            info = pickle.load(f)
         # BUY
         if balance == 0:
-            if stage == Stage.STABLE_DECREASE or stage == Stage.END_OF_DECREASE or stage == Stage.START_OF_INCREASE:
-                peekout = utils.peekout(data, "buy")
-                rsi_val = data[RSI.RSI].iloc[-1]
-                result["info"] = f"[Peekout]: {peekout} | [RSI]: {rsi_val}"
-                if peekout and rsi_val <= 30 and krw > 8000:
+            if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
+                fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
+                if info[ticker]["status"] == "none" and fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
+                    utils.update_info(ticker, "", "stoch_check")
+                rsi = data[RSI.RSI]
+                if info[ticker]["status"] == "stoch_check" and 45 <= rsi.iloc[-1] <= 55:
+                    utils.update_info(ticker, "", "rsi_check")
+                macd_bullish = utils.macd_bullish(data)
+                if info[ticker]["status"] == "rsi_check" and macd_bullish:
+                    utils.update_info(ticker, "", "macd_check")
+                if info[ticker]["status"] == "macd_check" and fast.iloc[-1] < 70:
                     exchange.create_buy_order(ticker, self.price_keys[ticker])
+                    utils.update_info(ticker, "short", "none", float(data["close"].iloc[-1]))
         # SELL
         else:
-            if stage == Stage.STABLE_INCREASE or stage == Stage.END_OF_INCREASE or stage == Stage.START_OF_DECREASE:
-                peekout, rsi_val = utils.peekout(data, "sell"), data[RSI.RSI].iloc[-1]
-                result["info"] = f"[Peekout]: {peekout} | [RSI]: {rsi_val}]"
-                if peekout and rsi_val >= 70:
+            if info[ticker]["position"] == "short":
+                entry_price = float(info[ticker]["price"])
+                stop_loss = entry_price * 0.95
+                take_profit = entry_price + (entry_price - stop_loss) * 1.5
+                if data["close"].iloc[-1] > take_profit:
                     exchange.create_sell_order(ticker, balance)
+                    utils.update_info(ticker, "long", "none")
+                sell_price = min(data["close"].iloc[-10:].max(), take_profit)  # 익절 구간 적용
+                if info[ticker]["status"] == "macd_check" and data["close"].iloc[-1] > sell_price:
+                    exchange.create_sell_order(ticker, balance)
+                    utils.update_info(ticker, "long", "none")
 
-        return result
+                fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
+                if info[ticker]["status"] == "none" and fast.iloc[-1] > 70 and slow.iloc[-1] > 70:
+                    utils.update_info(ticker, "", "stoch_check")
+
+                rsi = data[RSI.RSI]
+                if info[ticker]["status"] == "stoch_check" and 45 <= rsi.iloc[-1] <= 70:
+                    utils.update_info(ticker, "", "rsi_check")
+
+                macd_bearish = utils.macd_bearish(data)
+                if info[ticker]["status"] == "rsi_check" and macd_bearish:
+                    utils.update_info(ticker, "", "macd_check")
+
+        return info

@@ -20,13 +20,15 @@ def init(ticker_list):
     with open("info.plk", "wb") as f:
         pickle.dump(info, f)
 
-def update_info(ticker, position="", status = ""):
+def update_info(ticker, position="", status = "", price = 0):
     with open("info.plk", "rb") as f:
         info = pickle.load(f)
     if position != "":
         info[ticker]["position"] = position
     if status != "none":
         info[ticker]["status"] = status
+    if price != 0:
+        info[ticker]["price"] = price
     with open("info.plk", "wb") as f:
         pickle.dump(info, f)
 
@@ -68,12 +70,15 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[MACD.LOW_BEARISH] = LowMACD.bearish_val
 
     # STOCHASTIC
-    stochastic = Stochastic(data)
+    stochastic = Stochastic(data, 12, 3, 3)
     data[Stochastic.D_FAST] = stochastic.d_fast
     data[Stochastic.D_SLOW] = stochastic.d_slow
+    data[Stochastic.BULLISH] = stochastic.bullish_val
+    data[Stochastic.BEARISH] = stochastic.bearish_val
+
 
     # RSI
-    rsi = RSI(data, 9)
+    rsi = RSI(data, 14)
     data[RSI.RSI] = rsi.val
     data[RSI.SIG] = rsi.signal_val
     data[RSI.BULLISH] = rsi.bullish_val
@@ -100,18 +105,24 @@ def peekout(data, mode):
     else:
         raise ValueError("Unexpected Mode" + mode)
 
-def bullish(data):
-    up, mid, low, rsi = (
-        data[MACD.UP_BULLISH].iloc[-5:],
-        data[MACD.MID_BULLISH].iloc[-5:],
-        data[MACD.LOW_BULLISH].iloc[-5:],
-        data[RSI.BULLISH].iloc[-5:],
+def macd_bullish(data):
+    up, mid = (
+        data[MACD.UP_BULLISH].iloc[-3:],
+        data[MACD.MID_BULLISH].iloc[-3:],
     )
     return True if (
         up.isin([True]).any() and
-        mid.isin([True]).any() and
-        low.isin([True]).any() and
-        rsi.isin([True]).any()
+        mid.isin([True]).any()
+    ) else False
+
+def macd_bearish(data):
+    up, mid = (
+        data[MACD.UP_BEARISH].iloc[-3:],
+        data[MACD.MID_BEARISH].iloc[-3:],
+    )
+    return True if (
+        up.isin([True]).any() and
+        mid.isin([True]).any()
     ) else False
 
 def bearish(data):
@@ -127,5 +138,3 @@ def bearish(data):
         low.isin([True]).any() and
         rsi.isin([True]).any()
     ) else False
-
-
