@@ -113,17 +113,18 @@ class TradingService(ITradingService):
                     info[ticker]["status"] = "macd_check"
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
-                if info[ticker]["status"] == "macd_check" and fast.iloc[-1] < 65:
-                    info[ticker]["status"] = "none"
-                    info[ticker]["position"] = "short"
-                    info[ticker]["price"] = data["close"].iloc[-1]
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
-                    exchange.create_buy_order(ticker, self.price_keys[ticker])
-                else:
-                    info[ticker]["status"] = "none"
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
+                if info[ticker]["status"] == "macd_check":
+                    if fast.iloc[-1] < 65:
+                        info[ticker]["status"] = "none"
+                        info[ticker]["position"] = "short"
+                        info[ticker]["price"] = data["close"].iloc[-1]
+                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                            pickle.dump(info, f)
+                        exchange.create_buy_order(ticker, self.price_keys[ticker])
+                    else:
+                        info[ticker]["status"] = "none"
+                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                            pickle.dump(info, f)
         # SELL
         else:
             if info[ticker]["position"] == "short":
