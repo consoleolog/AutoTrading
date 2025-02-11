@@ -6,6 +6,7 @@ import exchange
 import utils
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from dto.macd import MACD
 from dto.stochastic import Stochastic
 from logger import LoggerFactory
 from constant.stage import Stage
@@ -110,7 +111,7 @@ class TradingService(ITradingService):
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                macd_bullish = utils.macd_bullish(data)
+                macd_bullish = True if data[MACD.BULLISH].iloc[:-2].isin([True]).any() else False
                 if info[ticker]["stoch"] and macd_bullish:
                     info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
@@ -135,7 +136,7 @@ class TradingService(ITradingService):
             if info[ticker]["position"] == "short":
                 prev_low = data["low"].iloc[-2:].min()
                 take_profit = prev_low * 1.5
-                if data["close"].iloc[-1] > take_profit:
+                if data["close"].iloc[-1] >= take_profit:
                     info[ticker]["position"] = "long"
                     info[ticker]["stoch"] = False
                     info[ticker]["macd"] = False
@@ -146,14 +147,14 @@ class TradingService(ITradingService):
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
 
-                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
-                    info[ticker]["position"] = "long"
-                    info[ticker]["stoch"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["rsi"] = False
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
-                    exchange.create_sell_order(ticker, balance)
+                # if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                #     info[ticker]["position"] = "long"
+                #     info[ticker]["stoch"] = False
+                #     info[ticker]["macd"] = False
+                #     info[ticker]["rsi"] = False
+                #     with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                #         pickle.dump(info, f)
+                #     exchange.create_sell_order(ticker, balance)
 
                 if info[ticker]["stoch"] == False and fast.iloc[-1] > 70 and slow.iloc[-1] > 70:
                     info[ticker]["stoch"] = True
@@ -166,7 +167,7 @@ class TradingService(ITradingService):
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                macd_bearish = utils.macd_bearish(data)
+                macd_bearish = True if data[MACD.BEARISH].iloc[:-2].isin([True]).any() else False
                 if info[ticker]["stoch"] and macd_bearish:
                     info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:

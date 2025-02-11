@@ -32,32 +32,12 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[EMA.LONG] = EMA(data["close"], long_period).val
 
     # MACD
-    ShortMACD = MACD(data, short_period, mid_period)
-    MidMACD = MACD(data, short_period, long_period)
-    LowMACD = MACD(data, mid_period, long_period)
-
-    data[MACD.UP] = ShortMACD.val
-    data[MACD.MID] = MidMACD.val
-    data[MACD.LOW] = LowMACD.val
-    # SIGNAL
-    data[MACD.UP_SIG] = ShortMACD.signal_val
-    data[MACD.MID_SIG] = MidMACD.signal_val
-    data[MACD.LOW_SIG] = LowMACD.signal_val
-
-    # HISTOGRAM
-    data[MACD.UP_HIST] = ShortMACD.histogram_val
-    data[MACD.MID_HIST] = MidMACD.histogram_val
-    data[MACD.LOW_HIST] = LowMACD.histogram_val
-
-    # BULLISH
-    data[MACD.UP_BULLISH] = ShortMACD.bullish_val
-    data[MACD.MID_BULLISH] = MidMACD.bullish_val
-    data[MACD.LOW_BULLISH] = LowMACD.bullish_val
-
-    # BEARISH
-    data[MACD.UP_BEARISH] = ShortMACD.bearish_val
-    data[MACD.MID_BEARISH] = MidMACD.bearish_val
-    data[MACD.LOW_BEARISH] = LowMACD.bearish_val
+    macd = MACD(data, 10, 20)
+    data[MACD.MACD] = macd.val
+    data[MACD.SIG] = macd.signal_val
+    data[MACD.HIST] = macd.histogram_val
+    data[MACD.BULLISH] = macd.bullish_val
+    data[MACD.BEARISH] = macd.bearish_val
 
     # STOCHASTIC
     stochastic = Stochastic(data, 12, 3, 3)
@@ -65,7 +45,6 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[Stochastic.D_SLOW] = stochastic.d_slow
     data[Stochastic.BULLISH] = stochastic.bullish_val
     data[Stochastic.BEARISH] = stochastic.bearish_val
-
 
     # RSI
     rsi = RSI(data, 14)

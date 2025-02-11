@@ -2,6 +2,13 @@ import pandas as pd
 from dto.ema import EMA
 
 class MACD:
+    MACD = "MACD"
+
+    BULLISH = "BULLISH"
+    BEARISH = "BEARISH"
+    SIG = "SIGNAL"
+    HIST = "HISTOGRAM"
+
     UP = "MACD_UP"
     MID = "MACD_MID"
     LOW = "MACD_LOW"
