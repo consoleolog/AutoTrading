@@ -17,6 +17,8 @@ def init(ticker_list):
                 "position": "long",
                 "status": "none"
             }
+        for i in info:
+            del i[ticker]["price"]
     with open("info.plk", "wb") as f:
         pickle.dump(info, f)
 

@@ -78,5 +78,5 @@ def get_candles(ticker, timeframe: TimeFrame) -> pd.DataFrame:
     pd_ts = pd_ts.dt.tz_convert("Asia/Seoul")
     pd_ts = pd_ts.dt.tz_localize(None)
     df.set_index(pd_ts, inplace=True)
-    df = df[['datetime', 'open', 'high', 'low', 'close',]]
+    df = df[['datetime', 'open', 'high', 'low', 'close', 'volume']]
     return df
