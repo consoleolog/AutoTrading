@@ -14,4 +14,4 @@ services:
       - "3001"
     command: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "3001"]
     volumes:
-      - ./info.plk:./app/info.plk
+      - ./info.plk:/app/info.plk
