@@ -20,18 +20,6 @@ def init(ticker_list):
     with open("info.plk", "wb") as f:
         pickle.dump(info, f)
 
-def update_info(ticker, position="", status = "", price = 0):
-    with open("info.plk", "rb") as f:
-        info = pickle.load(f)
-    if position != "":
-        info[ticker]["position"] = position
-    if status != "none":
-        info[ticker]["status"] = status
-    if price != 0:
-        info[ticker]["price"] = price
-    with open("info.plk", "wb") as f:
-        pickle.dump(info, f)
-
 
 def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 40):
     data = exchange.get_candles(ticker, timeframe)
