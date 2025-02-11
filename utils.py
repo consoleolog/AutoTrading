@@ -15,10 +15,10 @@ def init(ticker_list):
         if ticker not in info:
             info[ticker] = {
                 "position": "long",
-                "status": "none"
+                "stoch": False,
+                "macd": False,
+                "rsi": False,
             }
-        if "price" in info[ticker]:
-            del info[ticker]["price"]
     with open("info.plk", "wb") as f:
         pickle.dump(info, f)
 

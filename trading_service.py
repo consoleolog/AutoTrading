@@ -96,74 +96,84 @@ class TradingService(ITradingService):
             info = pickle.load(f)
         # BUY
         if balance == 0:
+            rsi = data[RSI.RSI]
             if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
-                if info[ticker]["status"] == "none" and fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
-                    info[ticker]["status"] = "stoch_check"
+                if info[ticker]["stoch"] == False and fast.iloc[-1] < 25 and slow.iloc[-1] < 25 and rsi.iloc[-1] < 45:
+                    info[ticker]["stoch"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                rsi = data[RSI.RSI]
-                if info[ticker]["status"] == "stoch_check" and 40 <= rsi.iloc[-1] <= 60:
-                    info[ticker]["status"] = "rsi_check"
+                if info[ticker]["stoch"] and rsi.iloc[-1] > 50:
+                    info[ticker]["rsi"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
                 macd_bullish = utils.macd_bullish(data)
-                if info[ticker]["status"] == "rsi_check" and macd_bullish:
-                    info[ticker]["status"] = "macd_check"
+                if info[ticker]["stoch"] and macd_bullish:
+                    info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
-                if info[ticker]["status"] == "macd_check":
-                    if fast.iloc[-1] < 70:
-                        info[ticker]["status"] = "none"
+                if info[ticker]["stoch"] and info[ticker]["rsi"] and info[ticker]["macd"]:
+                    if fast.iloc[-1] < 65:
                         info[ticker]["position"] = "short"
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
                         with open(f"{os.getcwd()}/info.plk", "wb") as f:
                             pickle.dump(info, f)
                         exchange.create_buy_order(ticker, self.price_keys[ticker])
                     else:
-                        info[ticker]["status"] = "none"
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
                         with open(f"{os.getcwd()}/info.plk", "wb") as f:
                             pickle.dump(info, f)
         # SELL
         else:
             if info[ticker]["position"] == "short":
-                prev_low = data["low"].iloc[-5:].min()
+                prev_low = data["low"].iloc[-2:].min()
                 take_profit = prev_low * 1.5
                 if data["close"].iloc[-1] > take_profit:
                     info[ticker]["position"] = "long"
-                    info[ticker]["status"] = "none"
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["rsi"] = False
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
                     exchange.create_sell_order(ticker, balance)
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
-                if info[ticker]["status"] == "none" and fast.iloc[-1] > 70 and slow.iloc[-1] > 70:
-                    info[ticker]["status"] = "stoch_check"
+                if info[ticker]["stoch"] == False and fast.iloc[-1] > 70 and slow.iloc[-1] > 70:
+                    info[ticker]["stoch"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
                 rsi = data[RSI.RSI]
-                if info[ticker]["status"] == "stoch_check" and 40 <= rsi.iloc[-1] <= 60:
-                    info[ticker]["status"] = "rsi_check"
+                if info[ticker]["stoch"] and rsi.iloc[-1] < 55:
+                    info[ticker]["rsi"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
                 macd_bearish = utils.macd_bearish(data)
-                if info[ticker]["status"] == "rsi_check" and macd_bearish:
-                    info[ticker]["status"] = "macd_check"
+                if info[ticker]["stoch"] and macd_bearish:
+                    info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                if info[ticker]["status"] == "macd_check":
+                if info[ticker]["stoch"] and info[ticker]["rsi"] and info[ticker]["macd"]:
                     if rsi.iloc[-1] > 25:
                         info[ticker]["position"] = "long"
-                        info[ticker]["status"] = "none"
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
                         with open(f"{os.getcwd()}/info.plk", "wb") as f:
                             pickle.dump(info, f)
                         exchange.create_sell_order(ticker, balance)
                     else:
-                        info[ticker]["status"] = "none"
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
                         with open(f"{os.getcwd()}/info.plk", "wb") as f:
                             pickle.dump(info, f)
 
