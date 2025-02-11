@@ -1,8 +1,34 @@
+import pickle
 import exchange
 from dto.ema import EMA
 from dto.macd import MACD
 from dto.rsi import RSI
 from dto.stochastic import Stochastic
+
+def init(ticker_list):
+    try:
+        with open("info.plk", "rb") as f:
+            info = pickle.load(f)
+    except FileNotFoundError:
+        info = {}
+    for ticker in ticker_list:
+        if ticker not in info:
+            info[ticker] = {
+                "position": "long",
+                "status": "none"
+            }
+    with open("info.plk", "wb") as f:
+        pickle.dump(info, f)
+
+def update_info(ticker, position="", status = ""):
+    with open("info.plk", "rb") as f:
+        info = pickle.load(f)
+    if position != "":
+        info[ticker]["position"] = position
+    if status != "none":
+        info[ticker]["status"] = status
+    with open("info.plk", "wb") as f:
+        pickle.dump(info, f)
 
 
 def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 40):
@@ -101,3 +127,5 @@ def bearish(data):
         low.isin([True]).any() and
         rsi.isin([True]).any()
     ) else False
+
+
