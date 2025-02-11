@@ -94,6 +94,7 @@ class TradingService(ITradingService):
         balance = exchange.get_balance(ticker)
         with open(f"{os.getcwd()}/info.plk", "rb") as f:
             info = pickle.load(f)
+            
         # BUY
         if balance == 0:
             rsi = data[RSI.RSI]
