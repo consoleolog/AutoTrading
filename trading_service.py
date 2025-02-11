@@ -101,12 +101,12 @@ class TradingService(ITradingService):
                 if info[ticker]["status"] == "none" and fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
                     utils.update_info(ticker, "", "stoch_check")
                 rsi = data[RSI.RSI]
-                if info[ticker]["status"] == "stoch_check" and 45 <= rsi.iloc[-1] <= 55:
+                if info[ticker]["status"] == "stoch_check" and 40 <= rsi.iloc[-1] <= 55:
                     utils.update_info(ticker, "", "rsi_check")
                 macd_bullish = utils.macd_bullish(data)
                 if info[ticker]["status"] == "rsi_check" and macd_bullish:
                     utils.update_info(ticker, "", "macd_check")
-                if info[ticker]["status"] == "macd_check" and fast.iloc[-1] < 70:
+                if info[ticker]["status"] == "macd_check" and fast.iloc[-1] < 65:
                     exchange.create_buy_order(ticker, self.price_keys[ticker])
                     utils.update_info(ticker, "short", "none", float(data["close"].iloc[-1]))
                 else:
