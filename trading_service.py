@@ -120,7 +120,7 @@ class TradingService(ITradingService):
                     exchange.create_sell_order(ticker, balance)
                     utils.update_info(ticker, "long", "none")
 
-                if info[ticker]["status"] == "macd_check":
+                if data[RSI.BEARISH].iloc[-2:].isin([True]).any():
                     exchange.create_sell_order(ticker, balance)
                     utils.update_info(ticker, "long", "none")
 
