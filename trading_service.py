@@ -151,7 +151,7 @@ class TradingService(ITradingService):
 
             if info[ticker]["position"] == "short":
                 prev_low = data["low"].iloc[-2:].min()
-                take_profit = prev_low * 1.03
+                take_profit = prev_low * 1.1
                 if data["close"].iloc[-1] >= take_profit:
                     info[ticker]["position"] = "long"
                     info[ticker]["stoch"] = False
