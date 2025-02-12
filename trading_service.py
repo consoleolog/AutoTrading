@@ -47,7 +47,7 @@ class TradingService(ITradingService):
         self.ticker_list = ticker_list
         self.price_keys = {
             "BTC/KRW": 0.0002,
-            "ETH/KRW": 0.0030,
+            "ETH/KRW": 0.0090,
             "BCH/KRW": 0.011,
             "AAVE/KRW": 0.015,
             "SOL/KRW": 0.02,
@@ -155,7 +155,11 @@ class TradingService(ITradingService):
                     exchange.create_sell_order(ticker, balance)
 
                 if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
-                    exchange.create_sell_order(ticker, balance / 2)
+                    half_balance = balance / 2
+                    exchange.create_sell_order(ticker, half_balance)
+
+                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    exchange.create_sell_order(ticker, balance)
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
                 rsi = data[RSI.RSI]
