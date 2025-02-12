@@ -158,7 +158,7 @@ class TradingService(ITradingService):
                     half_balance = balance / 2
                     exchange.create_sell_order(ticker, half_balance)
 
-                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                if data[RSI.BEARISH].iloc[-2:].isin([True]).any():
                     exchange.create_sell_order(ticker, balance)
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
