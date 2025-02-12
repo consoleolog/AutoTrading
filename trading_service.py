@@ -116,7 +116,7 @@ class TradingService(ITradingService):
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                macd_bullish = True if data[MACD.BULLISH].iloc[:-2].isin([True]).any() else False
+                macd_bullish = True if data[MACD.BULLISH].iloc[-2:].isin([True]).any() else False
                 if info[ticker]["stoch"] and macd_bullish:
                     info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
@@ -175,7 +175,7 @@ class TradingService(ITradingService):
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                macd_bearish = True if data[MACD.BEARISH].iloc[:-2].isin([True]).any() else False
+                macd_bearish = True if data[MACD.BEARISH].iloc[-2:].isin([True]).any() else False
                 if info[ticker]["stoch"] and macd_bearish:
                     info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
