@@ -164,10 +164,22 @@ class TradingService(ITradingService):
                 rsi = data[RSI.RSI]
 
                 if info[ticker]["stoch"] and fast.iloc[-1] < 70 and data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    info[ticker]["position"] = "long"
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["rsi"] = False
+                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                        pickle.dump(info, f)
                     half_balance = balance / 2
                     exchange.create_sell_order(ticker, half_balance)
 
                 if info[ticker]["stoch"] and fast.iloc[-1] < 70 and data[RSI.BEARISH].iloc[-2:].isin([True]).any():
+                    info[ticker]["position"] = "long"
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["rsi"] = False
+                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                        pickle.dump(info, f)
                     exchange.create_sell_order(ticker, balance)
 
                 if info[ticker]["stoch"] == False and fast.iloc[-1] > 70 and slow.iloc[-1] > 70 and rsi.iloc[-1] > 55:
