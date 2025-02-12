@@ -107,7 +107,7 @@ class TradingService(ITradingService):
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
                 if fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
-                    if rsi.iloc[-1] > 45:
+                    if rsi.iloc[-1] < data[RSI.SIG].iloc[-1]:
                         info[ticker]["stoch"] = False
                         info[ticker]["rsi"] = False
                         info[ticker]["macd"] = False
@@ -123,7 +123,7 @@ class TradingService(ITradingService):
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
-                if info[ticker]["stoch"] and info[ticker]["macd"] and rsi.iloc[-1] >= 50:
+                if info[ticker]["stoch"] and rsi.iloc[-1] >= 45 and rsi.iloc[-1] > data[RSI.SIG].iloc[-1]:
                     info[ticker]["rsi"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
