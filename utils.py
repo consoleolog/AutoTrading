@@ -32,7 +32,7 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[EMA.LONG] = EMA(data["close"], long_period).val
 
     # MACD
-    macd = MACD(data, 10, 20)
+    macd = MACD(data, 12, 26,9)
     data[MACD.MACD] = macd.val
     data[MACD.SIG] = macd.signal_val
     data[MACD.HIST] = macd.histogram_val

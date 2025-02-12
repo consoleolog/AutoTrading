@@ -106,8 +106,11 @@ class TradingService(ITradingService):
             if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
-                if info[ticker]["stoch"] == False and fast.iloc[-1] < 25 and slow.iloc[-1] < 25 and rsi.iloc[-1] < 45:
-                    info[ticker]["stoch"] = True
+                if fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
+                    if rsi.iloc[-1] > 45:
+                        info[ticker]["stoch"] = False
+                    else:
+                        info[ticker]["stoch"] = True
                     info[ticker]["macd"] = False
                     info[ticker]["rsi"] = False
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
@@ -118,15 +121,6 @@ class TradingService(ITradingService):
                     info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
-
-                if info[ticker]["stoch"]:
-                    if fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
-                        if rsi.iloc[-1] > 45:
-                            info[ticker]["stoch"] = False
-                        info[ticker]["macd"] = False
-                        info[ticker]["rsi"] = False
-                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                            pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and info[ticker]["macd"] and rsi.iloc[-1] >= 50:
                     info[ticker]["rsi"] = True
