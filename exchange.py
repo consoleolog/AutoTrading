@@ -44,7 +44,7 @@ def create_sell_order(ticker:str, amount: float):
             symbol=ticker,
             amount=amount
         )
-    except ccxt.base.errors.BadRequest as err:
+    except ccxt.BadRequest as err:
         print(f"{ticker} - {str(err)}")
         market, krw = ticker.split('/')
         return exchange.create_market_sell_order(
