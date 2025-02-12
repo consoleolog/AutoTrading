@@ -111,8 +111,7 @@ class TradingService(ITradingService):
                         info[ticker]["stoch"] = False
                     else:
                         info[ticker]["stoch"] = True
-                    info[ticker]["macd"] = False
-                    info[ticker]["rsi"] = False
+                    
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
