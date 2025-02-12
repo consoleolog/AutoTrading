@@ -109,6 +109,8 @@ class TradingService(ITradingService):
                 if fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
                     if rsi.iloc[-1] > 45:
                         info[ticker]["stoch"] = False
+                        info[ticker]["rsi"] = False
+                        info[ticker]["macd"] = False
                     else:
                         info[ticker]["stoch"] = True
                     
