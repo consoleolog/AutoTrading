@@ -150,7 +150,7 @@ class TradingService(ITradingService):
 
             if info[ticker]["position"] == "short":
                 prev_low = data["low"].iloc[-2:].min()
-                take_profit = prev_low * 1.5
+                take_profit = prev_low * 1.05
                 if data["close"].iloc[-1] >= take_profit:
                     info[ticker]["position"] = "long"
                     info[ticker]["stoch"] = False
@@ -160,15 +160,15 @@ class TradingService(ITradingService):
                         pickle.dump(info, f)
                     exchange.create_sell_order(ticker, balance)
 
-                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
+                rsi = data[RSI.RSI]
+
+                if info[ticker]["stoch"] and fast.iloc[-1] < 70 and data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
                     half_balance = balance / 2
                     exchange.create_sell_order(ticker, half_balance)
 
-                if data[RSI.BEARISH].iloc[-2:].isin([True]).any():
+                if info[ticker]["stoch"] and fast.iloc[-1] < 70 and data[RSI.BEARISH].iloc[-2:].isin([True]).any():
                     exchange.create_sell_order(ticker, balance)
-
-                fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
-                rsi = data[RSI.RSI]
 
                 if info[ticker]["stoch"] == False and fast.iloc[-1] > 70 and slow.iloc[-1] > 70 and rsi.iloc[-1] > 55:
                     info[ticker]["stoch"] = True
