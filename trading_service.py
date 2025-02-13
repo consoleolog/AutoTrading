@@ -95,6 +95,9 @@ class TradingService(ITradingService):
         # BUY
         if balance == 0:
             info[ticker]["position"] = "long"
+            if "price" in info[ticker]:
+                del info[ticker]["price"]
+
             if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
 
                 # -*- 오신호 방지용 신호 초기화 조건들 -*-
@@ -146,11 +149,13 @@ class TradingService(ITradingService):
         # SELL
         else:
             info[ticker]["position"] = "short"
+            if "price" not in info[ticker]:
+                info[ticker]["price"] = data["close"].iloc[-2:].min()
+
             with open(f"{os.getcwd()}/info.plk", "wb") as f:
                 pickle.dump(info, f)
 
             if info[ticker]["position"] == "short":
-
                 # 수익이 0.5 가 넘으면 익절
                 profit = self.calculate_profit(ticker, info[ticker]["price"])
                 if profit > 0.5:
