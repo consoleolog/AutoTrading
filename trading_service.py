@@ -48,7 +48,7 @@ class TradingService(ITradingService):
         self.price_keys = {
             "BTC/KRW": 0.0002,
             "ETH/KRW": 0.0090,
-            "BCH/KRW": 0.011,
+            "BCH/KRW": 0.022,
             "AAVE/KRW": 0.015,
             "SOL/KRW": 0.02,
             "BSV/KRW": 0.1,
@@ -105,8 +105,8 @@ class TradingService(ITradingService):
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
                 if fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
-                    # K 선과 D 선이 25 아래에 있을 때 RSI 45 이상이면 신호 초기화
-                    if rsi.iloc[-1] > 48:
+                    # K 선과 D 선이 25 아래에 있을 때 RSI
+                    if rsi.iloc[-1] < rsi.iloc[RSI.SIG].iloc[-1]:
                         info[ticker]["stoch"] = False
                         info[ticker]["rsi"] = False
                         info[ticker]["macd"] = False
@@ -117,35 +117,45 @@ class TradingService(ITradingService):
 
                 if info[ticker]["stoch"] and data[MACD.BULLISH].iloc[-2:].isin([True]).any():
                     # Stochastic 신호가 과매수에 갔다 온 상태에서 MACD 의 시그널 교차가 일어단다면
-                    info[ticker]["macd"] = True
+                    # Stochastic 이 시그널 과 하양으로 교차가 일어거나 RSI 의 시그널 교차 신호 초기화
+                    if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                        info[ticker]["stoch"] = False
+                        info[ticker]["rsi"] = False
+                        info[ticker]["macd"] = False
+                    else:
+                        info[ticker]["macd"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and rsi.iloc[-1] >= 45 and rsi.iloc[-1] > data[RSI.SIG].iloc[-1]:
                     # Stochastic 신호가 과매수에 갔다가 RSI 가 45 이상이면서 RSI 가 시그널 선 위에 있을 때
-                    info[ticker]["rsi"] = True
+                    # Stochastic 이 시그널 과 하양으로 교차가 일어났으면 신호 초기화
+                    if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                        info[ticker]["stoch"] = False
+                        info[ticker]["rsi"] = False
+                        info[ticker]["macd"] = False
+                    else:
+                        info[ticker]["rsi"] = True
                     with open(f"{os.getcwd()}/info.plk", "wb") as f:
                         pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and info[ticker]["macd"] and info[ticker]["rsi"]:
                     # Stochastic 신호가 과매수에 갔다가 MACD 선의 시그널 교차도 일어나고 RSI 가 45 이상일 때
                     # K 선이 과매도가 아닐 때 매수
-                    if fast.iloc[-1] < 65:
+                    if fast.iloc[-1] > 65 or data[Stochastic.BEARISH].iloc[-2:].isin([True]).any() or data[RSI.BEARISH].iloc[-2:].isin([True]).any():
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
+                    # 그게 아니면 초기화
+                    else:
                         info[ticker]["position"] = "short"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
                         info[ticker]["price"] = float(data["close"].iloc[-1])
-                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                            pickle.dump(info, f)
                         exchange.create_buy_order(ticker, self.price_keys[ticker])
-                    # 그게 아니면 초기화
-                    else:
-                        info[ticker]["stoch"] = False
-                        info[ticker]["macd"] = False
-                        info[ticker]["rsi"] = False
-                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                            pickle.dump(info, f)
+                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                        pickle.dump(info, f)
         # SELL
         else:
             info[ticker]["position"] = "short"
