@@ -49,12 +49,9 @@ class TradingService(ITradingService):
             "BTC/KRW": 0.0002,
             "ETH/KRW": 0.0090,
             "BCH/KRW": 0.022,
-            "AAVE/KRW": 0.015,
-            "SOL/KRW": 0.02,
-            "BSV/KRW": 0.1,
-            "YFI/KRW": 0.0006,
-            "BNB/KRW": 0.007,
-            "COMP/KRW": 0.09,
+            "AAVE/KRW": 0.030,
+            "SOL/KRW": 0.04,
+            "ENS/KRW": 0.5,
         }
         self.candle_repository = candle_repository
         self.order_repository = order_repository
