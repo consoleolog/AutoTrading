@@ -126,7 +126,9 @@ class TradingService(ITradingService):
 
                     # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수 검토
                     # 만약 K 선이 과매수 상태에 들어서지 않았다면 매수 진행
-                    if info[ticker]["macd"] and info[ticker]["rsi"]:
+                    prev_rsi = data[RSI.RSI].iloc[-2]
+                    prev_macd = data[MACD.MACD].iloc[-2]
+                    if info[ticker]["macd"] and info[ticker]["rsi"] and rsi > prev_rsi and macd > prev_macd:
                         if fast <= 70:
                             curr_price = data["close"].iloc[-1]
                             info[ticker]["position"] = "short"
