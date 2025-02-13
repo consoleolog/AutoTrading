@@ -98,6 +98,11 @@ class TradingService(ITradingService):
             rsi = data[RSI.RSI]
             if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
 
+                if data[MACD.BEARISH].iloc[-2:].isin([True]).any():
+                    info[ticker]["macd"] = False
+                if data[RSI.BEARISH].iloc[-2:].isin([True]).any():
+                    info[ticker]["rsi"] = False
+
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
                 if fast.iloc[-1] < 25 and slow.iloc[-1] < 25:
                     # K 선과 D 선이 25 아래에 있을 때 RSI
@@ -118,7 +123,7 @@ class TradingService(ITradingService):
                     else:
                         info[ticker]["macd"] = True
 
-                if info[ticker]["stoch"] and rsi.iloc[-1] >= 45 and rsi.iloc[-1] > data[RSI.SIG].iloc[-1]:
+                if info[ticker]["stoch"] and rsi.iloc[-1] > 50 and rsi.iloc[-1] > data[RSI.SIG].iloc[-1]:
                     # Stochastic 신호가 과매수에 갔다가 RSI 가 45 이상이면서 RSI 가 시그널 선 위에 있을 때
                     # Stochastic 이 시그널 과 하양으로 교차가 일어났으면 신호 초기화
                     if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
