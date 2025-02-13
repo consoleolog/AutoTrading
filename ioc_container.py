@@ -17,7 +17,7 @@ class IocContainer:
         self.ticker_list = [
             "BTC/KRW",
             "ETH/KRW",
-            # "BCH/KRW",
+            "BCH/KRW",
             # "AAVE/KRW",
             # "SOL/KRW",
             # "BSV/KRW",
