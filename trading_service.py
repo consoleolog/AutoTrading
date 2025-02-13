@@ -97,8 +97,6 @@ class TradingService(ITradingService):
         # BUY
         if balance == 0:
             info[ticker]["position"] = "long"
-            with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                pickle.dump(info, f)
 
             rsi = data[RSI.RSI]
             if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
@@ -112,8 +110,6 @@ class TradingService(ITradingService):
                         info[ticker]["macd"] = False
                     else:
                         info[ticker]["stoch"] = True
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and data[MACD.BULLISH].iloc[-2:].isin([True]).any():
                     # Stochastic 신호가 과매수에 갔다 온 상태에서 MACD 의 시그널 교차가 일어단다면
@@ -124,8 +120,6 @@ class TradingService(ITradingService):
                         info[ticker]["macd"] = False
                     else:
                         info[ticker]["macd"] = True
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and rsi.iloc[-1] >= 45 and rsi.iloc[-1] > data[RSI.SIG].iloc[-1]:
                     # Stochastic 신호가 과매수에 갔다가 RSI 가 45 이상이면서 RSI 가 시그널 선 위에 있을 때
@@ -136,8 +130,6 @@ class TradingService(ITradingService):
                         info[ticker]["macd"] = False
                     else:
                         info[ticker]["rsi"] = True
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and info[ticker]["macd"] and info[ticker]["rsi"]:
                     # Stochastic 신호가 과매수에 갔다가 MACD 선의 시그널 교차도 일어나고 RSI 가 45 이상일 때
@@ -154,8 +146,9 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = False
                         info[ticker]["price"] = float(data["close"].iloc[-1])
                         exchange.create_buy_order(ticker, self.price_keys[ticker])
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
+
+                with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                    pickle.dump(info, f)
         # SELL
         else:
             info[ticker]["position"] = "short"
@@ -172,8 +165,6 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     if "price" in info[ticker]:
                         del info[ticker]["price"]
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
                     exchange.create_sell_order(ticker, balance)
 
                 fast, slow = data[Stochastic.D_FAST], data[Stochastic.D_SLOW]
@@ -182,20 +173,14 @@ class TradingService(ITradingService):
                 if info[ticker]["stoch"] == False and fast.iloc[-1] > 70 and slow.iloc[-1] > 70 and rsi.iloc[-1] > 55:
                     # K 선과 D 선이 70 이상 일 때
                     info[ticker]["stoch"] = True
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and data[MACD.BEARISH].iloc[-2:].isin([True]).any():
                     # Stochastic 이 과 매도 상태에 갔다가 MACD 의 시그널 교차가 일어난다면
                     info[ticker]["macd"] = True
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and rsi.iloc[-1] <= 55:
                     # Stochastic 이 과 매도 상태에 갔다가 RSI 가 55 이하라면
                     info[ticker]["rsi"] = True
-                    with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                        pickle.dump(info, f)
 
                 if info[ticker]["stoch"] and info[ticker]["macd"] and info[ticker]["rsi"] :
                     if rsi.iloc[-1] > 25:
@@ -205,15 +190,13 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = False
                         if "price" in info[ticker]:
                             del info[ticker]["price"]
-                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                            pickle.dump(info, f)
                         exchange.create_sell_order(ticker, balance)
                     else:
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
-                        with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                            pickle.dump(info, f)
+                with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                    pickle.dump(info, f)
 
         info[ticker]["ticker"] = ticker
         return info[ticker]
