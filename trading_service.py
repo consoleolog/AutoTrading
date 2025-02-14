@@ -90,8 +90,15 @@ class TradingService(ITradingService):
     def auto_trading(self, ticker: str, timeframe: TimeFrame):
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
         balance = exchange.get_balance(ticker)
-        with open(f"{os.getcwd()}/info.plk", "rb") as f:
-            info = pickle.load(f)
+        try:
+            with open(f"{os.getcwd()}/info.plk", "rb") as f:
+                info = pickle.load(f)
+        except EOFError:
+            with open(f"{os.getcwd()}/info.plk", "rb") as f:
+                info = pickle.load(f)
+        finally:
+            with open(f"{os.getcwd()}/info.plk", "rb") as f:
+                info = pickle.load(f)
 
         # BUY
         if balance == 0:
@@ -100,7 +107,7 @@ class TradingService(ITradingService):
                 del info[ticker]["price"]
 
             if info[ticker]["position"] == "long":
-                fast, slow = data[Stochastic.D_FAST].iloc[-2], data[Stochastic.D_SLOW].iloc[-2]
+                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
                 if fast >= Stochastic.OVER_BOUGHT:
                     # K 선이 과매수 상태 ( 75 이상 ) 에 있으면 모든 신호 초기화
@@ -124,7 +131,7 @@ class TradingService(ITradingService):
                     if data[MACD.BULLISH].iloc[-3:-1].isin([True]).any() and macd > macd_sig:
                         info[ticker]["macd"] = True
 
-                    rsi, rsi_sig = data[RSI.RSI].iloc[-2], data[RSI.SIG].iloc[-2]
+                    rsi, rsi_sig = data[RSI.RSI].iloc[-1], data[RSI.SIG].iloc[-1]
                     # Stochastic 의 신호와 MACD의 신호를 만족하면서 RSI 의 값이 50 이상 ( 시그널의 값보다 RSI 의 값이 커야함 (상승의 표시) )
                     if info[ticker]["macd"] and rsi >= 50 and rsi > rsi_sig:
                         info[ticker]["rsi"] = True
@@ -150,7 +157,7 @@ class TradingService(ITradingService):
 
             if info[ticker]["position"] == "short":
 
-                fast, slow = data[Stochastic.D_FAST].iloc[-2], data[Stochastic.D_SLOW].iloc[-2]
+                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
                 if fast <= Stochastic.OVER_SOLD:
                     # K 선이 과매도 상태 ( 25 이하 ) 면 모든 신호 초기화
@@ -175,7 +182,7 @@ class TradingService(ITradingService):
                     if data[MACD.BEARISH].iloc[-3:-1].isin([True]).any() and macd < macd_sig:
                         info[ticker]["macd"] = True
 
-                    rsi, rsi_sig = data[RSI.RSI].iloc[-2], data[RSI.SIG].iloc[-2]
+                    rsi, rsi_sig = data[RSI.RSI].iloc[-1], data[RSI.SIG].iloc[-1]
                     # Stochastic 신호와 MACD의 신호를 만족하면서 갔다가 RSI 가 50 이하 일 때
                     if info[ticker]["macd"] and rsi <= 50 and rsi < rsi_sig:
                         info[ticker]["rsi"] = True
@@ -199,6 +206,5 @@ class TradingService(ITradingService):
                 # 변경사항 반영
                 with open(f"{os.getcwd()}/info.plk", "wb") as f:
                     pickle.dump(info, f)
-
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info[ticker]
