@@ -102,11 +102,11 @@ class TradingService(ITradingService):
                 fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
                 if fast >= Stochastic.OVER_BOUGHT:
-                    # K 선이 과매수 상태에 있으면 모든 신호 초기화
+                    # K 선이 과매수 상태 ( 75 이상 ) 에 있으면 모든 신호 초기화
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if data[MACD.BEARISH].iloc[-2:].isin([True]).any():
+                if data[MACD.BEARISH].iloc[-3:-1].isin([True]).any():
                     # MACD 의 시그널이 하향 교차가 되면 모든 신호 초기화
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -114,13 +114,13 @@ class TradingService(ITradingService):
                 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
 
                 if fast <= Stochastic.OVER_SOLD and slow <= Stochastic.OVER_SOLD:
-                    # K 선과 D 선이 과매도 상태에 있을 때 ( 30 이하 일 때)
+                    # K 선과 D 선이 과매도 상태에 있을 때 ( 25 이하 일 때)
                     info[ticker]["stoch"] = True
 
                 if info[ticker]["stoch"]:
                     macd, macd_sig = data[MACD.MACD].iloc[-1], data[MACD.SIG].iloc[-1]
                     # Stochastic 의 신호를 만족하면서 MACD 의 시그널이 상향으로 교차했을 때
-                    if data[MACD.BULLISH].iloc[-2:].isin([True]).any() and macd > macd_sig:
+                    if data[MACD.BULLISH].iloc[-3:-1].isin([True]).any() and macd > macd_sig:
                         info[ticker]["macd"] = True
 
                     rsi, rsi_sig = data[RSI.RSI].iloc[-1], data[RSI.SIG].iloc[-1]
@@ -130,7 +130,8 @@ class TradingService(ITradingService):
 
                     # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수 검토
                     # 만약 K 선이 과매수 상태에 들어서지 않았다면 매수 진행
-                    if info[ticker]["macd"] and info[ticker]["rsi"]:
+                    prev_rsi, prev_macd = data[RSI.RSI].iloc[-2], data[MACD.MACD].iloc[-2]
+                    if info[ticker]["macd"] and macd > prev_macd and info[ticker]["rsi"] and rsi > prev_rsi:
                         if fast <= Stochastic.OVER_BOUGHT:
                             curr_price = data["close"].iloc[-1]
                             info[ticker]["position"] = "short"
@@ -172,7 +173,7 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if data[MACD.BULLISH].iloc[-2:].isin([True]).any():
+                if data[MACD.BULLISH].iloc[-3:-1].isin([True]).any():
                     # MACD 의 시그널이 상향 교차하면 모든 신호 초기회
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -187,7 +188,7 @@ class TradingService(ITradingService):
                     macd, macd_sig = data[MACD.MACD].iloc[-1], data[MACD.SIG].iloc[-1]
 
                     # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
-                    if data[MACD.BEARISH].iloc[-2:].isin([True]).any() and macd < macd_sig:
+                    if data[MACD.BEARISH].iloc[-3:-1].isin([True]).any() and macd < macd_sig:
                         info[ticker]["macd"] = True
 
                     rsi, rsi_sig = data[RSI.RSI].iloc[-1], data[RSI.SIG].iloc[-1]
