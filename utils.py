@@ -48,6 +48,7 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
 
     # STOCHASTIC
     stochastic = Stochastic(data, 12, 3, 3)
+    data[Stochastic.K_SLOW] = stochastic.d_fast
     data[Stochastic.D_FAST] = stochastic.d_fast
     data[Stochastic.D_SLOW] = stochastic.d_slow
     data[Stochastic.BULLISH] = stochastic.bullish_val

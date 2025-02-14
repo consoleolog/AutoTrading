@@ -144,6 +144,8 @@ class TradingService(ITradingService):
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
                         info[ticker]["price"] = float(curr_price)
+                        if "profit" in info[ticker]:
+                            del info[ticker]["profit"]
                         exchange.create_buy_order(ticker, self.price_keys[ticker])
 
                 # 변경 사항 저장
@@ -194,17 +196,25 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = False
                         exchange.create_sell_order(ticker, balance)
 
-                # 수익이 0.5 가 넘으면 익절
-                profit = self.calculate_profit(ticker, info[ticker]["price"])
-                if profit > 0.5:
-                    info[ticker]["position"] = "long"
-                    info[ticker]["stoch"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["rsi"] = False
-                    exchange.create_sell_order(ticker, balance)
+            profit = self.calculate_profit(ticker, info[ticker]["price"])
+            info[ticker]["profit"] = profit
+            # 수익이 0.2 가 넘으면 익절
+            if profit >= 0.2:
+                info[ticker]["position"] = "long"
+                info[ticker]["stoch"] = False
+                info[ticker]["macd"] = False
+                info[ticker]["rsi"] = False
+                exchange.create_sell_order(ticker, balance)
+            # Stochastic 이 우하향했을 때 수익이 0.1 이 넘는다면 익절
+            if profit >= 0.1 and data[Stochastic.BEARISH].iloc[-3:-1].isin([True]).any():
+                info[ticker]["position"] = "long"
+                info[ticker]["stoch"] = False
+                info[ticker]["macd"] = False
+                info[ticker]["rsi"] = False
+                exchange.create_sell_order(ticker, balance)
 
-                # 변경사항 반영
-                with open(f"{os.getcwd()}/info.plk", "wb") as f:
-                    pickle.dump(info, f)
+            # 변경사항 반영
+            with open(f"{os.getcwd()}/info.plk", "wb") as f:
+                pickle.dump(info, f)
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info[ticker]

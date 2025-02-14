@@ -2,6 +2,7 @@
 
 class Stochastic:
     D_FAST = "Stochastic_D_FAST"
+    K_SLOW = "Stochastic_D_FAST"
     D_SLOW = "Stochastic_D_SLOW"
 
     BULLISH = "Stochastic_BULLISH"
