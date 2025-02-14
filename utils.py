@@ -32,12 +32,19 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[EMA.LONG] = EMA(data["close"], long_period).val
 
     # MACD
-    macd = MACD(data, 10, 20,9)
-    data[MACD.MACD] = macd.val
-    data[MACD.SIG] = macd.signal_val
-    data[MACD.HIST] = macd.histogram_val
-    data[MACD.BULLISH] = macd.bullish_val
-    data[MACD.BEARISH] = macd.bearish_val
+    ShortMACD = MACD(data,10, 20)
+    data[MACD.SHORT] = ShortMACD.val
+    data[MACD.SHORT_SIG] = ShortMACD.signal_val
+    data[MACD.SHORT_HIST] = ShortMACD.histogram_val
+    data[MACD.SHORT_BULLISH] = ShortMACD.bullish_val
+    data[MACD.SHORT_BEARISH] = ShortMACD.bearish_val
+
+    LongMACD = MACD(data, 12, 26)
+    data[MACD.LONG] = LongMACD.val
+    data[MACD.LONG_SIG] = LongMACD.signal_val
+    data[MACD.LONG_HIST] = LongMACD.histogram_val
+    data[MACD.LONG_BULLISH] = LongMACD.bullish_val
+    data[MACD.LONG_BEARISH] = LongMACD.bearish_val
 
     # STOCHASTIC
     stochastic = Stochastic(data, 12, 3, 3)
@@ -47,63 +54,18 @@ def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 
     data[Stochastic.BEARISH] = stochastic.bearish_val
 
     # RSI
-    rsi = RSI(data, 14)
-    data[RSI.RSI] = rsi.val
-    data[RSI.SIG] = rsi.signal_val
-    data[RSI.BULLISH] = rsi.bullish_val
-    data[RSI.BEARISH] = rsi.bearish_val
+    ShortRSI = RSI(data, 9)
+    data[RSI.SHORT] = ShortRSI.val
+    data[RSI.SHORT_SIG] = ShortRSI.signal_val
+    data[RSI.SHORT_BULLISH] = ShortRSI.bullish_val
+    data[RSI.SHORT_BEARISH] = ShortRSI.bearish_val
+
+    LongRSI = RSI(data, 14)
+    data[RSI.LONG] = LongRSI.val
+    data[RSI.LONG_SIG] = LongRSI.signal_val
+    data[RSI.LONG_BULLISH] = LongRSI.bullish_val
+    data[RSI.LONG_BEARISH] = LongRSI.bearish_val
 
     current_stage = EMA.get_stage(data)
 
     return current_stage, data
-
-def peekout(data, mode):
-    up_hist, mid_hist, low_hist = (
-         data[MACD.UP_HIST].iloc[-8:],
-        data[MACD.MID_HIST].iloc[-8:],
-        data[MACD.LOW_HIST].iloc[-8:],
-    )
-    if mode == "buy":
-        return all([up_hist.iloc[-1] > up_hist.min(),
-                    mid_hist.iloc[-1] > mid_hist.min(),
-                    low_hist.iloc[-1] > low_hist.min()])
-    elif mode == "sell":
-        return all([up_hist.iloc[-1] < up_hist.max(),
-                    mid_hist.iloc[-1] < mid_hist.max(),
-                    low_hist.iloc[-1] < low_hist.max()])
-    else:
-        raise ValueError("Unexpected Mode" + mode)
-
-def macd_bullish(data):
-    up, mid = (
-        data[MACD.UP_BULLISH].iloc[-3:],
-        data[MACD.MID_BULLISH].iloc[-3:],
-    )
-    return True if (
-        up.isin([True]).any() and
-        mid.isin([True]).any()
-    ) else False
-
-def macd_bearish(data):
-    up, mid = (
-        data[MACD.UP_BEARISH].iloc[-3:],
-        data[MACD.MID_BEARISH].iloc[-3:],
-    )
-    return True if (
-        up.isin([True]).any() and
-        mid.isin([True]).any()
-    ) else False
-
-def bearish(data):
-    up, mid, low, rsi = (
-        data[MACD.UP_BEARISH].iloc[-5:],
-        data[MACD.MID_BEARISH].iloc[-5:],
-        data[MACD.LOW_BEARISH].iloc[-5:],
-        data[RSI.BEARISH].iloc[-5:],
-    )
-    return True if (
-        up.isin([True]).any() and
-        mid.isin([True]).any() and
-        low.isin([True]).any() and
-        rsi.isin([True]).any()
-    ) else False

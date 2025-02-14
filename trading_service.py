@@ -114,7 +114,7 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if data[MACD.BEARISH].iloc[-3:-1].isin([True]).any():
+                if data[MACD.SHORT_BEARISH].iloc[-3:-1].isin([True]).any():
                     # MACD 의 시그널이 하향 교차가 되면 모든 신호 초기화
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -126,12 +126,12 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = True
 
                 if info[ticker]["stoch"]:
-                    macd, macd_sig = data[MACD.MACD].iloc[-2], data[MACD.SIG].iloc[-2]
+                    macd, macd_sig = data[MACD.SHORT].iloc[-1], data[MACD.SHORT_SIG].iloc[-1]
                     # Stochastic 의 신호를 만족하면서 MACD 의 시그널이 상향으로 교차했을 때
-                    if data[MACD.BULLISH].iloc[-3:-1].isin([True]).any() and macd > macd_sig:
+                    if data[MACD.SHORT_BULLISH].iloc[-3:-1].isin([True]).any() and macd > macd_sig:
                         info[ticker]["macd"] = True
 
-                    rsi, rsi_sig = data[RSI.RSI].iloc[-1], data[RSI.SIG].iloc[-1]
+                    rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
                     # Stochastic 의 신호와 MACD의 신호를 만족하면서 RSI 의 값이 50 이상 ( 시그널의 값보다 RSI 의 값이 커야함 (상승의 표시) )
                     if info[ticker]["macd"] and rsi >= 50 and rsi > rsi_sig:
                         info[ticker]["rsi"] = True
@@ -164,7 +164,7 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if data[MACD.BULLISH].iloc[-3:-1].isin([True]).any():
+                if data[MACD.SHORT_BULLISH].iloc[-3:-1].isin([True]).any():
                     # MACD 의 시그널이 상향 교차하면 모든 신호 초기회
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -176,13 +176,13 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = True
 
                 if info[ticker]["stoch"]:
-                    macd, macd_sig = data[MACD.MACD].iloc[-2], data[MACD.SIG].iloc[-2]
+                    macd, macd_sig = data[MACD.SHORT].iloc[-2], data[MACD.SHORT_SIG].iloc[-2]
 
                     # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
-                    if data[MACD.BEARISH].iloc[-3:-1].isin([True]).any() and macd < macd_sig:
+                    if data[MACD.SHORT_BEARISH].iloc[-3:-1].isin([True]).any() and macd < macd_sig:
                         info[ticker]["macd"] = True
 
-                    rsi, rsi_sig = data[RSI.RSI].iloc[-1], data[RSI.SIG].iloc[-1]
+                    rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
                     # Stochastic 신호와 MACD의 신호를 만족하면서 갔다가 RSI 가 50 이하 일 때
                     if info[ticker]["macd"] and rsi <= 50 and rsi < rsi_sig:
                         info[ticker]["rsi"] = True

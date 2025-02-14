@@ -2,32 +2,17 @@ import pandas as pd
 from dto.ema import EMA
 
 class MACD:
-    MACD = "MACD"
+    SHORT = "MACD_SHORT"
+    SHORT_SIG = "MACD_SHORT_SIGNAL"
+    SHORT_HIST = "MACD_SHORT_HIST"
+    SHORT_BULLISH = "MACD_SHORT_BULLISH"
+    SHORT_BEARISH = "MACD_SHORT_BEARISH"
 
-    BULLISH = "BULLISH"
-    BEARISH = "BEARISH"
-    SIG = "SIGNAL"
-    HIST = "HISTOGRAM"
-
-    UP = "MACD_UP"
-    MID = "MACD_MID"
-    LOW = "MACD_LOW"
-
-    UP_SIG = "MACD_UP_SIGNAL"
-    MID_SIG = "MACD_MID_SIGNAL"
-    LOW_SIG = "MACD_LOW_SIGNAL"
-
-    UP_BULLISH = "MACD_UP_BULLISH"
-    MID_BULLISH = "MACD_MID_BULLISH"
-    LOW_BULLISH = "MACD_LOW_BULLISH"
-
-    UP_BEARISH = "MACD_UP_BEARISH"
-    MID_BEARISH = "MACD_MID_BEARISH"
-    LOW_BEARISH = "MACD_LOW_BEARISH"
-
-    UP_HIST = "MACD_UP_HISTOGRAM"
-    MID_HIST = "MACD_MID_HISTOGRAM"
-    LOW_HIST = "MACD_LOW_HISTOGRAM"
+    LONG = "MACD_LONG"
+    LONG_SIG = "MACD_LONG_SIGNAL"
+    LONG_HIST = "MACD_LONG_HIST"
+    LONG_BULLISH = "MACD_LONG_BULLISH"
+    LONG_BEARISH = "MACD_LONG_BEARISH"
 
     def __init__(self, data:pd.DataFrame ,period_short:int = 12, period_long:int = 26, period_signal: int = 9):
         ShortEMA = EMA(data["close"], period_short).val

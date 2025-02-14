@@ -5,10 +5,15 @@ from dto.ema import EMA
 
 
 class RSI:
-    RSI = "RSI"
-    SIG = "RSI_SIGNAL"
-    BULLISH = "RSI_BULLISH"
-    BEARISH = "RSI_BEARISH"
+    SHORT = "RSI_SHORT"
+    SHORT_SIG = "RSI_SHORT_SIGNAL"
+    SHORT_BULLISH = "RSI_SHORT_BULLISH"
+    SHORT_BEARISH = "RSI_SHORT_BEARISH"
+
+    LONG = "RSI_LONG"
+    LONG_SIG = "RSI_LONG_SIGNAL"
+    LONG_BULLISH = "RSI_LONG_BULLISH"
+    LONG_BEARISH = "RSI_LONG_BEARISH"
 
     def __init__(self, data: DataFrame, period=14, period_sigal = 9):
         delta = data["close"].diff()
