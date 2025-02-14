@@ -98,9 +98,14 @@ class TradingService(ITradingService):
             if "price" in info[ticker]:
                 del info[ticker]["price"]
 
-            if info[ticker]["position"] == "long" and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
-
+            if info[ticker]["position"] == "long":
+                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
+                if fast >= Stochastic.OVER_BOUGHT:
+                    # K 선이 과매수 상태에 있으면 모든 신호 초기화
+                    info[ticker]["rsi"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["stoch"] = False
                 if data[MACD.BEARISH].iloc[-2:].isin([True]).any():
                     # MACD 의 시그널이 하향 교차가 되면 모든 신호 초기화
                     info[ticker]["rsi"] = False
@@ -108,8 +113,7 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = False
                 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
 
-                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
-                if fast <= 30 and slow <= 30:
+                if fast <= Stochastic.OVER_SOLD and slow <= Stochastic.OVER_SOLD:
                     # K 선과 D 선이 과매도 상태에 있을 때 ( 30 이하 일 때)
                     info[ticker]["stoch"] = True
 
@@ -127,7 +131,7 @@ class TradingService(ITradingService):
                     # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수 검토
                     # 만약 K 선이 과매수 상태에 들어서지 않았다면 매수 진행
                     if info[ticker]["macd"] and info[ticker]["rsi"]:
-                        if fast <= 70:
+                        if fast <= Stochastic.OVER_BOUGHT:
                             curr_price = data["close"].iloc[-1]
                             info[ticker]["position"] = "short"
                             info[ticker]["stoch"] = False
@@ -159,11 +163,15 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["rsi"] = False
-                    if "price" in info[ticker]:
-                        del info[ticker]["price"]
                     exchange.create_sell_order(ticker, balance)
 
+                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
+                if fast <= Stochastic.OVER_SOLD:
+                    # K 선이 과매도 상태 ( 25 이하 ) 면 모든 신호 초기화
+                    info[ticker]["rsi"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["stoch"] = False
                 if data[MACD.BULLISH].iloc[-2:].isin([True]).any():
                     # MACD 의 시그널이 상향 교차하면 모든 신호 초기회
                     info[ticker]["rsi"] = False
@@ -171,13 +179,13 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = False
                 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
 
-                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
-                if fast >= 70 and slow >= 70:
-                    # K 선과 D 선이 과매수 상태 일 때 ( 70 이상 일 때)
+                if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT:
+                    # K 선과 D 선이 과매수 상태 일 때 ( 75 이상 일 때)
                     info[ticker]["stoch"] = True
 
                 if info[ticker]["stoch"]:
                     macd, macd_sig = data[MACD.MACD].iloc[-1], data[MACD.SIG].iloc[-1]
+
                     # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
                     if data[MACD.BEARISH].iloc[-2:].isin([True]).any() and macd < macd_sig:
                         info[ticker]["macd"] = True
@@ -190,13 +198,11 @@ class TradingService(ITradingService):
                     if info[ticker]["macd"] and info[ticker]["rsi"]:
                         # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 손절 검토
                         # 만약 K 선이 과매도 상태에 들어서지 않았다면 손절
-                        if fast >= 30:
+                        if fast >= Stochastic.OVER_SOLD:
                             info[ticker]["position"] = "long"
                             info[ticker]["stoch"] = False
                             info[ticker]["macd"] = False
                             info[ticker]["rsi"] = False
-                            if "price" in info[ticker]:
-                                del info[ticker]["price"]
                             exchange.create_sell_order(ticker, balance)
                         # K 선이 과매도 상태라면 이전 신호들을 모두 초기화
                         else:
@@ -208,5 +214,5 @@ class TradingService(ITradingService):
                 with open(f"{os.getcwd()}/info.plk", "wb") as f:
                     pickle.dump(info, f)
 
-        info[ticker]["ticker"] = ticker
+        info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info[ticker]
