@@ -100,12 +100,12 @@ class TradingService(ITradingService):
             with open(f"{os.getcwd()}/info.plk", "rb") as f:
                 info = pickle.load(f)
         MACD_BULLISH = all([
-            data[MACD.SHORT_BULLISH].iloc[-3].isin([True]).any(),
-            data[MACD.LONG_BULLISH].iloc[-2].isin([True]).any(),
+            data[MACD.SHORT_BULLISH].iloc[-3:].isin([True]).any(),
+            data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any(),
         ])
         MACD_BEARISH = all([
-            data[MACD.SHORT_BEARISH].iloc[-3].isin([True]).any(),
-            data[MACD.LONG_BEARISH].iloc[-2].isin([True]).any(),
+            data[MACD.SHORT_BEARISH].iloc[-3:].isin([True]).any(),
+            data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any(),
         ])
         # BUY
         if balance == 0:
