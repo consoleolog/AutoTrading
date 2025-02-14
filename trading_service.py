@@ -38,11 +38,12 @@ class ITradingService(abc.ABC):
         pass
 
 class TradingService(ITradingService):
-    def __init__(self,
-                 ticker_list,
-                 candle_repository: ICandleRepository,
-                 order_repository: IOrderRepository,
-                 ):
+    def __init__(
+            self,
+            ticker_list,
+            candle_repository: ICandleRepository,
+            order_repository: IOrderRepository,
+    ):
         self.logger = LoggerFactory.get_logger(__class__.__name__, "AutoTrading")
         LoggerFactory.set_stream_level(LoggerFactory.INFO)
         self.ticker_list = ticker_list
@@ -128,22 +129,15 @@ class TradingService(ITradingService):
                     if info[ticker]["macd"] and rsi >= 50 and rsi > rsi_sig:
                         info[ticker]["rsi"] = True
 
-                    # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수 검토
-                    # 만약 K 선이 과매수 상태에 들어서지 않았다면 매수 진행
+                    # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수
                     if info[ticker]["macd"] and info[ticker]["rsi"]:
-                        if fast <= Stochastic.OVER_BOUGHT:
-                            curr_price = data["close"].iloc[-2:].min()
-                            info[ticker]["position"] = "short"
-                            info[ticker]["stoch"] = False
-                            info[ticker]["macd"] = False
-                            info[ticker]["rsi"] = False
-                            info[ticker]["price"] = float(curr_price)
-                            exchange.create_buy_order(ticker, self.price_keys[ticker])
-                        # K 선이 과매수 상태 라면 이전 신호들을 모두 초기화
-                        else:
-                            info[ticker]["stoch"] = False
-                            info[ticker]["macd"] = False
-                            info[ticker]["rsi"] = False
+                        curr_price = data["close"].iloc[-2:].min()
+                        info[ticker]["position"] = "short"
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
+                        info[ticker]["price"] = float(curr_price)
+                        exchange.create_buy_order(ticker, self.price_keys[ticker])
 
                 # 변경 사항 저장
                 with open(f"{os.getcwd()}/info.plk", "wb") as f:
@@ -155,15 +149,6 @@ class TradingService(ITradingService):
                 info[ticker]["price"] = data["close"].iloc[-2:].min()
 
             if info[ticker]["position"] == "short":
-
-                # 수익이 0.5 가 넘으면 익절
-                profit = self.calculate_profit(ticker, info[ticker]["price"])
-                if profit > 0.5:
-                    info[ticker]["position"] = "long"
-                    info[ticker]["stoch"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["rsi"] = False
-                    exchange.create_sell_order(ticker, balance)
 
                 fast, slow = data[Stochastic.D_FAST].iloc[-2], data[Stochastic.D_SLOW].iloc[-2]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
@@ -196,19 +181,20 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = True
 
                     if info[ticker]["macd"] and info[ticker]["rsi"]:
-                        # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 손절 검토
-                        # 만약 K 선이 과매도 상태에 들어서지 않았다면 손절
-                        if fast >= Stochastic.OVER_SOLD:
-                            info[ticker]["position"] = "long"
-                            info[ticker]["stoch"] = False
-                            info[ticker]["macd"] = False
-                            info[ticker]["rsi"] = False
-                            exchange.create_sell_order(ticker, balance)
-                        # K 선이 과매도 상태라면 이전 신호들을 모두 초기화
-                        else:
-                            info[ticker]["stoch"] = False
-                            info[ticker]["macd"] = False
-                            info[ticker]["rsi"] = False
+                        # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 손절
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
+                        exchange.create_sell_order(ticker, balance)
+
+                # 수익이 0.5 가 넘으면 익절
+                profit = self.calculate_profit(ticker, info[ticker]["price"])
+                if profit > 0.5:
+                    info[ticker]["position"] = "long"
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["rsi"] = False
+                    exchange.create_sell_order(ticker, balance)
 
                 # 변경사항 반영
                 with open(f"{os.getcwd()}/info.plk", "wb") as f:
