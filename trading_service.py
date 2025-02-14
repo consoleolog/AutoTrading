@@ -99,7 +99,14 @@ class TradingService(ITradingService):
         finally:
             with open(f"{os.getcwd()}/info.plk", "rb") as f:
                 info = pickle.load(f)
-
+        MACD_BULLISH = all([
+            data[MACD.SHORT_BULLISH].iloc[-3].isin([True]).any(),
+            data[MACD.LONG_BULLISH].iloc[-2].isin([True]).any(),
+        ])
+        MACD_BEARISH = all([
+            data[MACD.SHORT_BEARISH].iloc[-3].isin([True]).any(),
+            data[MACD.LONG_BEARISH].iloc[-2].isin([True]).any(),
+        ])
         # BUY
         if balance == 0:
             info[ticker]["position"] = "long"
@@ -126,9 +133,8 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = True
 
                 if info[ticker]["stoch"]:
-                    macd, macd_sig = data[MACD.SHORT].iloc[-1], data[MACD.SHORT_SIG].iloc[-1]
                     # Stochastic 의 신호를 만족하면서 MACD 의 시그널이 상향으로 교차했을 때
-                    if data[MACD.SHORT_BULLISH].iloc[-3:-1].isin([True]).any() and macd > macd_sig:
+                    if MACD_BULLISH:
                         info[ticker]["macd"] = True
 
                     rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
@@ -166,7 +172,7 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if data[MACD.SHORT_BULLISH].iloc[-3:-1].isin([True]).any():
+                if MACD_BULLISH:
                     # MACD 의 시그널이 상향 교차하면 모든 신호 초기회
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -178,10 +184,8 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = True
 
                 if info[ticker]["stoch"]:
-                    macd, macd_sig = data[MACD.SHORT].iloc[-2], data[MACD.SHORT_SIG].iloc[-2]
-
                     # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
-                    if data[MACD.SHORT_BEARISH].iloc[-3:-1].isin([True]).any() and macd < macd_sig:
+                    if MACD_BEARISH:
                         info[ticker]["macd"] = True
 
                     rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
