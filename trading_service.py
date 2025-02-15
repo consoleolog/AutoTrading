@@ -108,6 +108,8 @@ class TradingService(ITradingService):
             info[ticker]["position"] = "long"
             if "price" in info[ticker]:
                 del info[ticker]["price"]
+            if "profit" in info[ticker]:
+                del info[ticker]["profit"]
 
             if info[ticker]["position"] == "long":
                 fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
