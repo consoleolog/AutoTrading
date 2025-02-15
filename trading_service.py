@@ -3,6 +3,9 @@ import abc
 import os
 import uuid
 import pickle
+
+import ccxt
+
 import exchange
 import utils
 from concurrent.futures import ThreadPoolExecutor
@@ -187,12 +190,15 @@ class TradingService(ITradingService):
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
                         exchange.create_sell_order(ticker, balance)
-                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
-                    info[ticker]["position"] = "long"
-                    info[ticker]["stoch"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["rsi"] = False
-                    exchange.create_sell_order(ticker, (balance/2))
+                try:
+                    if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                        info[ticker]["position"] = "long"
+                        info[ticker]["stoch"] = False
+                        info[ticker]["macd"] = False
+                        info[ticker]["rsi"] = False
+                        exchange.create_sell_order(ticker, (balance/2))
+                except ccxt.base.errors.ExchangeError:
+                    pass
 
         utils.save_info(info)
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
