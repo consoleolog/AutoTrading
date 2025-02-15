@@ -1,3 +1,4 @@
+import os
 import pickle
 import exchange
 from dto.ema import EMA
@@ -22,6 +23,24 @@ def init(ticker_list):
     with open("info.plk", "wb") as f:
         pickle.dump(info, f)
 
+
+def load_info():
+    file_path = f"{os.getcwd()}/info.plk"
+
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        return {}  # 파일이 없거나 비어 있으면 기본값 반환
+
+    try:
+        with open(file_path, "rb") as fr:
+            return pickle.load(fr)
+    except (EOFError, pickle.UnpicklingError):
+        return {}  # 파일이 손상되었거나 비어 있을 경우 기본값 반환
+
+
+def save_info(info):
+    file_path = f"{os.getcwd()}/info.plk"
+    with open(file_path, "wb") as fw:
+        pickle.dump(info, fw)
 
 def get_data(ticker, timeframe, short_period = 5, mid_period= 20, long_period = 40):
     data = exchange.get_candles(ticker, timeframe)

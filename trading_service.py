@@ -90,15 +90,11 @@ class TradingService(ITradingService):
     def auto_trading(self, ticker: str, timeframe: TimeFrame):
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
         balance = exchange.get_balance(ticker)
-        try:
-            with open(f"{os.getcwd()}/info.plk", "rb") as fr:
-                info = pickle.load(fr)
-        except EOFError:
-            with open(f"{os.getcwd()}/info.plk", "rb") as fr:
-                info = pickle.load(fr)
-        finally:
-            with open(f"{os.getcwd()}/info.plk", "rb") as fr:
-                info = pickle.load(fr)
+
+        info = utils.load_info()
+        if ticker not in info:
+            info[ticker] = {"position": "long", "stoch": False, "macd": False, "rsi": False}
+
         MACD_BULLISH = all([
             data[MACD.SHORT_BULLISH].iloc[-3:].isin([True]).any(),
             data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any(),
@@ -153,10 +149,6 @@ class TradingService(ITradingService):
                         if "profit" in info[ticker]:
                             del info[ticker]["profit"]
                         exchange.create_buy_order(ticker, self.price_keys[ticker])
-
-                # 변경 사항 저장
-                with open(f"{os.getcwd()}/info.plk", "wb") as fw:
-                    pickle.dump(info, fw)
         # SELL
         else:
             info[ticker]["position"] = "short"
@@ -216,9 +208,6 @@ class TradingService(ITradingService):
                 info[ticker]["macd"] = False
                 info[ticker]["rsi"] = False
                 exchange.create_sell_order(ticker, balance)
-
-            # 변경사항 반영
-            with open(f"{os.getcwd()}/info.plk", "wb") as fw:
-                pickle.dump(info, fw)
+        utils.save_info(info)
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info[ticker]
