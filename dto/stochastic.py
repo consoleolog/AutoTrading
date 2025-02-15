@@ -8,8 +8,8 @@ class Stochastic:
     BULLISH = "Stochastic_BULLISH"
     BEARISH = "Stochastic_BEARISH"
 
-    OVER_BOUGHT = 75
-    OVER_SOLD = 25
+    OVER_BOUGHT = 70
+    OVER_SOLD = 30
 
     def __init__(self, data, k_len=10, k_smooth=6, d_smooth=6):
         low_price = data['low'].rolling(window=k_len, min_periods=1).min()

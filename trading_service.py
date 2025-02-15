@@ -191,7 +191,7 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = False
                         exchange.create_sell_order(ticker, balance)
                 try:
-                    if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    if (fast >= Stochastic.OVER_BOUGHT or slow >= Stochastic.OVER_BOUGHT)and data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
                         info[ticker]["position"] = "long"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
