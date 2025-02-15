@@ -192,22 +192,22 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = False
                         exchange.create_sell_order(ticker, balance)
 
-            profit = self.calculate_profit(ticker, info[ticker]["price"])
-            info[ticker]["profit"] = profit
-            # 수익이 0.2 가 넘으면 익절
-            if profit >= 0.2:
-                info[ticker]["position"] = "long"
-                info[ticker]["stoch"] = False
-                info[ticker]["macd"] = False
-                info[ticker]["rsi"] = False
-                exchange.create_sell_order(ticker, balance)
-            # Stochastic 이 우하향했을 때 수익이 0.1 이 넘는다면 익절
-            if profit >= 0.1 and data[Stochastic.BEARISH].iloc[-3:-1].isin([True]).any():
-                info[ticker]["position"] = "long"
-                info[ticker]["stoch"] = False
-                info[ticker]["macd"] = False
-                info[ticker]["rsi"] = False
-                exchange.create_sell_order(ticker, balance)
+            # profit = self.calculate_profit(ticker, info[ticker]["price"])
+            # info[ticker]["profit"] = profit
+            # # 수익이 0.2 가 넘으면 익절
+            # if profit >= 0.2:
+            #     info[ticker]["position"] = "long"
+            #     info[ticker]["stoch"] = False
+            #     info[ticker]["macd"] = False
+            #     info[ticker]["rsi"] = False
+            #     exchange.create_sell_order(ticker, balance)
+            # # Stochastic 이 우하향했을 때 수익이 0.1 이 넘는다면 익절
+            # if profit >= 0.1 and data[Stochastic.BEARISH].iloc[-3:-1].isin([True]).any():
+            #     info[ticker]["position"] = "long"
+            #     info[ticker]["stoch"] = False
+            #     info[ticker]["macd"] = False
+            #     info[ticker]["rsi"] = False
+            #     exchange.create_sell_order(ticker, balance)
         utils.save_info(info)
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info[ticker]
