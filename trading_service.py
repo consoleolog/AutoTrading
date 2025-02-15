@@ -137,7 +137,7 @@ class TradingService(ITradingService):
 
                     rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
                     # Stochastic 의 신호와 MACD의 신호를 만족하면서 RSI 의 값이 50 이상 ( 시그널의 값보다 RSI 의 값이 커야함 (상승의 표시) )
-                    if info[ticker]["macd"] and 30 >= rsi > rsi_sig:
+                    if 30 >= rsi > rsi_sig:
                         info[ticker]["rsi"] = True
 
                     # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수
@@ -184,7 +184,7 @@ class TradingService(ITradingService):
 
                     rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
                     # Stochastic 신호와 MACD의 신호를 만족하면서 갔다가 RSI 가 50 이하 일 때
-                    if info[ticker]["macd"] and 70 <= rsi < rsi_sig:
+                    if 70 <= rsi < rsi_sig:
                         info[ticker]["rsi"] = True
 
                     if info[ticker]["macd"] and info[ticker]["rsi"]:
