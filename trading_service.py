@@ -95,14 +95,6 @@ class TradingService(ITradingService):
         if ticker not in info:
             info[ticker] = {"position": "long", "stoch": False, "macd": False, "rsi": False}
 
-        MACD_BULLISH = all([
-            data[MACD.SHORT_BULLISH].iloc[-3:].isin([True]).any(),
-            data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any(),
-        ])
-        MACD_BEARISH = all([
-            data[MACD.SHORT_BEARISH].iloc[-3:].isin([True]).any(),
-            data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any(),
-        ])
         # BUY
         if balance == 0:
             info[ticker]["position"] = "long"
@@ -119,7 +111,7 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if data[MACD.SHORT_BEARISH].iloc[-3:-1].isin([True]).any():
+                if data[MACD.SHORT_BEARISH].iloc[-2:].isin([True]).any():
                     # MACD 의 시그널이 하향 교차가 되면 모든 신호 초기화
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -132,12 +124,12 @@ class TradingService(ITradingService):
 
                 if info[ticker]["stoch"]:
                     # Stochastic 의 신호를 만족하면서 MACD 의 시그널이 상향으로 교차했을 때
-                    if MACD_BULLISH:
+                    if data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any():
                         info[ticker]["macd"] = True
 
                     rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
                     # Stochastic 의 신호와 MACD의 신호를 만족하면서 RSI 의 값이 50 이상 ( 시그널의 값보다 RSI 의 값이 커야함 (상승의 표시) )
-                    if 30 >= rsi > rsi_sig:
+                    if info[ticker]["macd"] and rsi >= 45 and rsi > rsi_sig:
                         info[ticker]["rsi"] = True
 
                     # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수
@@ -166,7 +158,7 @@ class TradingService(ITradingService):
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
                     info[ticker]["stoch"] = False
-                if MACD_BULLISH:
+                if data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any():
                     # MACD 의 시그널이 상향 교차하면 모든 신호 초기회
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -179,37 +171,29 @@ class TradingService(ITradingService):
 
                 if info[ticker]["stoch"]:
                     # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
-                    if MACD_BEARISH:
+                    macd, prev_macd, macd_sig = data[MACD.LONG].iloc[-1], data[MACD.LONG].iloc[-2], data[MACD.LONG_SIG].iloc[-1]
+                    if data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any():
                         info[ticker]["macd"] = True
 
-                    rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
+                    rsi, prev_rsi,rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG].iloc[-2] ,data[RSI.LONG_SIG].iloc[-1]
                     # Stochastic 신호와 MACD의 신호를 만족하면서 갔다가 RSI 가 50 이하 일 때
-                    if 70 <= rsi < rsi_sig:
+                    if info[ticker]["macd"] and rsi <= 50 and rsi < rsi_sig:
                         info[ticker]["rsi"] = True
 
                     if info[ticker]["macd"] and info[ticker]["rsi"]:
                         # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 손절
+                        info[ticker]["position"] = "long"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
                         exchange.create_sell_order(ticker, balance)
+                if data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    info[ticker]["position"] = "long"
+                    info[ticker]["stoch"] = False
+                    info[ticker]["macd"] = False
+                    info[ticker]["rsi"] = False
+                    exchange.create_sell_order(ticker, (balance/2))
 
-            # profit = self.calculate_profit(ticker, info[ticker]["price"])
-            # info[ticker]["profit"] = profit
-            # # 수익이 0.2 가 넘으면 익절
-            # if profit >= 0.2:
-            #     info[ticker]["position"] = "long"
-            #     info[ticker]["stoch"] = False
-            #     info[ticker]["macd"] = False
-            #     info[ticker]["rsi"] = False
-            #     exchange.create_sell_order(ticker, balance)
-            # # Stochastic 이 우하향했을 때 수익이 0.1 이 넘는다면 익절
-            # if profit >= 0.1 and data[Stochastic.BEARISH].iloc[-3:-1].isin([True]).any():
-            #     info[ticker]["position"] = "long"
-            #     info[ticker]["stoch"] = False
-            #     info[ticker]["macd"] = False
-            #     info[ticker]["rsi"] = False
-            #     exchange.create_sell_order(ticker, balance)
         utils.save_info(info)
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info[ticker]
