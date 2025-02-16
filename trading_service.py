@@ -109,7 +109,7 @@ class TradingService(ITradingService):
             if info[ticker]["position"] == "long":
                 fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
-                if fast >= Stochastic.OVER_BOUGHT or slow >= Stochastic.OVER_BOUGHT:
+                if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT:
                     # K 선이 과매수 상태 ( 75 이상 ) 에 있으면 모든 신호 초기화
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -121,7 +121,7 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = False
                 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
 
-                if fast <= Stochastic.OVER_SOLD or slow <= Stochastic.OVER_SOLD:
+                if fast <= Stochastic.OVER_SOLD and slow <= Stochastic.OVER_SOLD:
                     # K 선과 D 선이 과매도 상태에 있을 때 ( 25 이하 일 때)
                     info[ticker]["stoch"] = True
 
@@ -156,7 +156,7 @@ class TradingService(ITradingService):
 
                 fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
                 # -*- 오신호 방지용 신호 초기화 조건 -*-
-                if fast <= Stochastic.OVER_SOLD or slow <= Stochastic.OVER_SOLD:
+                if fast <= Stochastic.OVER_SOLD and slow <= Stochastic.OVER_SOLD:
                     # K 선이 과매도 상태 ( 25 이하 ) 면 모든 신호 초기화
                     info[ticker]["rsi"] = False
                     info[ticker]["macd"] = False
@@ -168,7 +168,7 @@ class TradingService(ITradingService):
                     info[ticker]["stoch"] = False
                 # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
 
-                if fast >= Stochastic.OVER_BOUGHT or slow >= Stochastic.OVER_BOUGHT:
+                if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT:
                     # K 선과 D 선이 과매수 상태 일 때 ( 75 이상 일 때)
                     info[ticker]["stoch"] = True
 
@@ -191,7 +191,7 @@ class TradingService(ITradingService):
                         info[ticker]["rsi"] = False
                         exchange.create_sell_order(ticker, balance)
                 try:
-                    if (fast >= Stochastic.OVER_BOUGHT or slow >= Stochastic.OVER_BOUGHT)and data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT and data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
                         info[ticker]["position"] = "long"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
