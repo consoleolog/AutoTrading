@@ -12,6 +12,9 @@ class IOrderRepository(abc.ABC):
     def find_by_ticker(self, ticker: str):
         pass
     @abc.abstractmethod
+    def find_by_ticker_and_timeframe(self, ticker, timeframe):
+        pass
+    @abc.abstractmethod
     def save(self, order: Order)->Order:
         pass
 
@@ -45,6 +48,22 @@ class OrderRepository(IOrderRepository):
                  LIMIT 1
                  """
         params = {"ticker": ticker}
+        return pd.read_sql(sql, self.engine, params=params)
+
+    def find_by_ticker_and_timeframe(self, ticker, timeframe):
+        sql = """SELECT O.ORDER_ID, 
+                        O.CANDLE_ID,
+                        O.TICKER,
+                        O.CLOSE,
+                        O.MODE,
+                        O.CREATED_AT 
+                 FROM ORDER_HISTORY AS O
+                 WHERE O.TICKER = %(ticker)s
+                 AND O.TIMEFRAME = %(timeframe)s
+                 ORDER BY O.CREATED_AT DESC
+                 LIMIT 1
+                 """
+        params = {"ticker": ticker, "timeframe": timeframe}
         return pd.read_sql(sql, self.engine, params=params)
 
     def save(self, order: Order):

@@ -80,9 +80,11 @@ class TradingService(ITradingService):
             self.logger.warning(e.__traceback__)
             pass
 
-    def calculate_profit(self, ticker, buy_price):
-        current_price = exchange.get_current_price(ticker)
-        return (current_price - buy_price) / buy_price * 100.0
+    def calculate_profit(self, ticker, timeframe):
+        order_history = self.order_repository.find_by_ticker_and_timeframe(ticker, timeframe)
+        curr_price = exchange.get_current_price(ticker)
+        buy_price = float(order_history["close"].iloc[-1])
+        return (curr_price - buy_price) / buy_price * 100.0
 
     def start_trading(self, timeframe: TimeFrame):
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -98,6 +100,7 @@ class TradingService(ITradingService):
         if ticker not in info:
             info[ticker] = {"position": "long", "stoch": False, "macd": False, "rsi": False}
 
+        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe)
         # BUY
         if balance == 0:
             info[ticker]["position"] = "long"
@@ -145,7 +148,9 @@ class TradingService(ITradingService):
                         info[ticker]["price"] = float(curr_price)
                         if "profit" in info[ticker]:
                             del info[ticker]["profit"]
-                        exchange.create_buy_order(ticker, self.price_keys[ticker])
+                        res = exchange.create_buy_order(ticker, self.price_keys[ticker])
+                        order = Order.of(candle, res, datetime.now())
+                        self.order_repository.save(order)
         # SELL
         else:
             info[ticker]["position"] = "short"
@@ -189,14 +194,18 @@ class TradingService(ITradingService):
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
-                        exchange.create_sell_order(ticker, balance)
+                        res = exchange.create_sell_order(ticker, balance)
+                        order = Order.of(candle, res, datetime.now())
+                        self.order_repository.save(order)
                 try:
-                    if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT and data[Stochastic.BEARISH].iloc[-2:].isin([True]).any():
+                    if self.calculate_profit(ticker, timeframe) > 0.1:
                         info[ticker]["position"] = "long"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
-                        exchange.create_sell_order(ticker, (balance/2))
+                        res = exchange.create_sell_order(ticker, balance)
+                        order = Order.of(candle, res, datetime.now())
+                        self.order_repository.save(order)
                 except ccxt.base.errors.ExchangeError:
                     pass
 
