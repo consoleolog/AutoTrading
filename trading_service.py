@@ -100,7 +100,6 @@ class TradingService(ITradingService):
         if ticker not in info:
             info[ticker] = {"position": "long", "stoch": False, "macd": False, "rsi": False}
 
-        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe)
         # BUY
         if balance == 0:
             info[ticker]["position"] = "long"
@@ -130,16 +129,8 @@ class TradingService(ITradingService):
 
                 if info[ticker]["stoch"]:
                     # Stochastic 의 신호를 만족하면서 MACD 의 시그널이 상향으로 교차했을 때
-                    if data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any():
-                        info[ticker]["macd"] = True
-
                     rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
-                    # Stochastic 의 신호와 MACD의 신호를 만족하면서 RSI 의 값이 50 이상 ( 시그널의 값보다 RSI 의 값이 커야함 (상승의 표시) )
-                    if info[ticker]["macd"] and rsi >= 45 and rsi > rsi_sig:
-                        info[ticker]["rsi"] = True
-
-                    # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 매수
-                    if info[ticker]["macd"] and info[ticker]["rsi"]:
+                    if data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any() and data[RSI.LONG_BULLISH].iloc[-2:].isin([True]).any():
                         curr_price = data["close"].iloc[-2:].min()
                         info[ticker]["position"] = "short"
                         info[ticker]["stoch"] = False
@@ -148,6 +139,8 @@ class TradingService(ITradingService):
                         info[ticker]["price"] = float(curr_price)
                         if "profit" in info[ticker]:
                             del info[ticker]["profit"]
+                        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],
+                                               timeframe)
                         res = exchange.create_buy_order(ticker, self.price_keys[ticker])
                         order = Order.of(candle, res, datetime.now())
                         self.order_repository.save(order)
@@ -180,34 +173,27 @@ class TradingService(ITradingService):
                 if info[ticker]["stoch"]:
                     # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
                     macd, prev_macd, macd_sig = data[MACD.LONG].iloc[-1], data[MACD.LONG].iloc[-2], data[MACD.LONG_SIG].iloc[-1]
-                    if data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any():
-                        info[ticker]["macd"] = True
-
                     rsi, prev_rsi,rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG].iloc[-2] ,data[RSI.LONG_SIG].iloc[-1]
-                    # Stochastic 신호와 MACD의 신호를 만족하면서 갔다가 RSI 가 50 이하 일 때
-                    if info[ticker]["macd"] and rsi <= 50 and rsi < rsi_sig:
-                        info[ticker]["rsi"] = True
 
-                    if info[ticker]["macd"] and info[ticker]["rsi"]:
-                        # Stochastic 신호와 MACD, RSI 의 조건을 만족하면 손절
+                    if data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any() and data[RSI.LONG_BEARISH].iloc[-2:].isin([True]).any():
                         info[ticker]["position"] = "long"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
+                        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe)
                         res = exchange.create_sell_order(ticker, balance)
                         order = Order.of(candle, res, datetime.now())
                         self.order_repository.save(order)
-                try:
+
                     if self.calculate_profit(ticker, timeframe) > 0.1:
                         info[ticker]["position"] = "long"
                         info[ticker]["stoch"] = False
                         info[ticker]["macd"] = False
                         info[ticker]["rsi"] = False
+                        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe)
                         res = exchange.create_sell_order(ticker, balance)
                         order = Order.of(candle, res, datetime.now())
                         self.order_repository.save(order)
-                except ccxt.base.errors.ExchangeError:
-                    pass
 
         utils.save_info(info)
         info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
