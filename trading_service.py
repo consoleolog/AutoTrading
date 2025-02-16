@@ -81,7 +81,7 @@ class TradingService(ITradingService):
             pass
 
     def calculate_profit(self, ticker, timeframe):
-        order_history = self.order_repository.find_by_ticker_and_timeframe(ticker, timeframe)
+        order_history = self.order_repository.find_by_ticker(ticker)
         curr_price = exchange.get_current_price(ticker)
         buy_price = float(order_history["close"].iloc[-1])
         return (curr_price - buy_price) / buy_price * 100.0
