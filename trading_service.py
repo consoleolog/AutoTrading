@@ -31,7 +31,7 @@ class ITradingService(abc.ABC):
     def save_order_history(self, candle, response)->Order:
         pass
     @abc.abstractmethod
-    def calculate_profit(self, ticker, buy_price):
+    def calculate_profit(self, candle: Candle):
         pass
     @abc.abstractmethod
     def start_trading(self, timeframe: TimeFrame):
@@ -80,9 +80,9 @@ class TradingService(ITradingService):
             self.logger.warning(e.__traceback__)
             pass
 
-    def calculate_profit(self, ticker, timeframe):
-        order_history = self.order_repository.find_by_ticker(ticker)
-        curr_price = exchange.get_current_price(ticker)
+    def calculate_profit(self, candle: Candle):
+        order_history = self.order_repository.find_by_ticker(candle.ticker)
+        curr_price = candle.close
         buy_price = float(order_history["close"].iloc[-1])
         return (curr_price - buy_price) / buy_price * 100.0
 
@@ -93,108 +93,27 @@ class TradingService(ITradingService):
         self.logger.info(result)
 
     def auto_trading(self, ticker: str, timeframe: TimeFrame):
+        info = {}
         stage, data = utils.get_data(ticker, timeframe, 5, 8, 13)
         balance = exchange.get_balance(ticker)
-
-        info = utils.load_info()
-        if ticker not in info:
-            info[ticker] = {"position": "long", "stoch": False, "macd": False, "rsi": False}
-
-        # BUY
+        rsi = data[RSI.LONG].iloc[-1]
         if balance == 0:
-            info[ticker]["position"] = "long"
-            if "price" in info[ticker]:
-                del info[ticker]["price"]
-            if "profit" in info[ticker]:
-                del info[ticker]["profit"]
-
-            if info[ticker]["position"] == "long":
-                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
-                # -*- 오신호 방지용 신호 초기화 조건 -*-
-                if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT:
-                    # K 선이 과매수 상태 ( 75 이상 ) 에 있으면 모든 신호 초기화
-                    info[ticker]["rsi"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["stoch"] = False
-                if data[MACD.SHORT_BEARISH].iloc[-2:].isin([True]).any():
-                    # MACD 의 시그널이 하향 교차가 되면 모든 신호 초기화
-                    info[ticker]["rsi"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["stoch"] = False
-                # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
-
-                if fast <= Stochastic.OVER_SOLD and slow <= Stochastic.OVER_SOLD:
-                    # K 선과 D 선이 과매도 상태에 있을 때 ( 25 이하 일 때)
-                    info[ticker]["stoch"] = True
-
-                if info[ticker]["stoch"]:
-                    # Stochastic 의 신호를 만족하면서 MACD 의 시그널이 상향으로 교차했을 때
-                    rsi, rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG_SIG].iloc[-1]
-                    if data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any() and data[RSI.LONG_BULLISH].iloc[-2:].isin([True]).any():
-                        curr_price = data["close"].iloc[-2:].min()
-                        info[ticker]["position"] = "short"
-                        info[ticker]["stoch"] = False
-                        info[ticker]["macd"] = False
-                        info[ticker]["rsi"] = False
-                        info[ticker]["price"] = float(curr_price)
-                        if "profit" in info[ticker]:
-                            del info[ticker]["profit"]
-                        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],
-                                               timeframe)
-                        res = exchange.create_buy_order(ticker, self.price_keys[ticker])
-                        order = Order.of(candle, res, datetime.now())
-                        self.order_repository.save(order)
-        # SELL
+            bullish = data[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any()
+            if bullish and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
+                candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],
+                                   timeframe)
+                res = exchange.create_buy_order(ticker, self.price_keys[ticker])
+                order = Order.of(candle, res, datetime.now())
+                self.order_repository.save(order)
+            info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
         else:
-            info[ticker]["position"] = "short"
-            if "price" not in info[ticker]:
-                info[ticker]["price"] = data["close"].iloc[-2:].min()
+            candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],timeframe)
+            profit = self.calculate_profit(candle)
+            if profit > 0.1:
+                res = exchange.create_sell_order(ticker, balance)
+                order = Order.of(candle, res, datetime.now())
+                self.order_repository.save(order)
+            info["profit"] = f"[Profit: {profit}]"
 
-            if info[ticker]["position"] == "short":
-
-                fast, slow = data[Stochastic.D_FAST].iloc[-1], data[Stochastic.D_SLOW].iloc[-1]
-                # -*- 오신호 방지용 신호 초기화 조건 -*-
-                if fast <= Stochastic.OVER_SOLD and slow <= Stochastic.OVER_SOLD:
-                    # K 선이 과매도 상태 ( 25 이하 ) 면 모든 신호 초기화
-                    info[ticker]["rsi"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["stoch"] = False
-                if data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any():
-                    # MACD 의 시그널이 상향 교차하면 모든 신호 초기회
-                    info[ticker]["rsi"] = False
-                    info[ticker]["macd"] = False
-                    info[ticker]["stoch"] = False
-                # -*- -*- -*- -*- -*- -*- -*- -*- -*- -*-
-
-                if fast >= Stochastic.OVER_BOUGHT and slow >= Stochastic.OVER_BOUGHT:
-                    # K 선과 D 선이 과매수 상태 일 때 ( 75 이상 일 때)
-                    info[ticker]["stoch"] = True
-
-                if info[ticker]["stoch"]:
-                    # Stochastic 신호를 만족하면서 MACD 의 시그널이 하향 교차 했을 때
-                    macd, prev_macd, macd_sig = data[MACD.LONG].iloc[-1], data[MACD.LONG].iloc[-2], data[MACD.LONG_SIG].iloc[-1]
-                    rsi, prev_rsi,rsi_sig = data[RSI.LONG].iloc[-1], data[RSI.LONG].iloc[-2] ,data[RSI.LONG_SIG].iloc[-1]
-
-                    if data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any() and data[RSI.LONG_BEARISH].iloc[-2:].isin([True]).any():
-                        info[ticker]["position"] = "long"
-                        info[ticker]["stoch"] = False
-                        info[ticker]["macd"] = False
-                        info[ticker]["rsi"] = False
-                        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe)
-                        res = exchange.create_sell_order(ticker, balance)
-                        order = Order.of(candle, res, datetime.now())
-                        self.order_repository.save(order)
-
-                    if self.calculate_profit(ticker, timeframe) > 0.1:
-                        info[ticker]["position"] = "long"
-                        info[ticker]["stoch"] = False
-                        info[ticker]["macd"] = False
-                        info[ticker]["rsi"] = False
-                        candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe)
-                        res = exchange.create_sell_order(ticker, balance)
-                        order = Order.of(candle, res, datetime.now())
-                        self.order_repository.save(order)
-
-        utils.save_info(info)
-        info[ticker]["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
-        return info[ticker]
+        info["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
+        return info

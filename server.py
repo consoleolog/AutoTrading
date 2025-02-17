@@ -14,7 +14,6 @@ async def lifespan(app):
     logger.info("     START UP     ")
     logger.info("==================")
     container.compose()
-    utils.init(container.ticker_list)
     scheduler_config = container.get(ISchedulerConfig)
     scheduler_config.start_scheduler()
     yield
