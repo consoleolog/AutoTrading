@@ -84,7 +84,7 @@ class TradingService(ITradingService):
         order_history = self.order_repository.find_by_ticker(candle.ticker)
         curr_price = candle.close
         buy_price = float(order_history["close"].iloc[-1])
-        return ((curr_price - buy_price) / buy_price) * 100.0
+        return (curr_price - buy_price) / (buy_price * 100.0)
 
     def start_trading(self, timeframe: TimeFrame):
         with ThreadPoolExecutor(max_workers=4) as executor:
