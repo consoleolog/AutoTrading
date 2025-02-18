@@ -18,7 +18,7 @@ class SchedulerConfig(ISchedulerConfig):
         self._scheduler.add_job(
             func=trading_service.start_trading,
             trigger='interval',
-            minutes=TimeFrame.KEYS[TimeFrame.MINUTE],
+            minutes=TimeFrame.KEYS[TimeFrame.MINUTE_3],
             kwargs={
               "timeframe": TimeFrame.MINUTE_15,
             },

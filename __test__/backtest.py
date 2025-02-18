@@ -38,19 +38,23 @@ class MyStrategy(Strategy):
             if self.position.pl_pct > 0.01:
                 self.logger.debug(self.position.pl_pct)
                 self.position.close()
-            # if df[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any() and stage in [Stage.STABLE_INCREASE, Stage.END_OF_INCREASE, Stage.START_OF_DECREASE]:
-            #     self.position.close()
-            # if df[MACD.SHORT_BEARISH].iloc[-2:].isin([True]).any():
-            #     self.position.close()
         else:
 
             if stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
-                if df[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any() and rsi <= 40:
+                bullish = all([
+                    df[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any(),
+                ])
+                peek_out = all([
+                    df[MACD.SHORT_HIST].iloc[-1] > df[MACD.SHORT_HIST].iloc[-8:].min(),
+                    df[MACD.LONG_HIST].iloc[-1] > df[MACD.LONG_HIST].iloc[-8:].min(),
+                ])
+                if  peek_out and rsi <= 40:
+                    # self.logger.debug(df)
                     self.buy()
 
 
-ticker = "ENS/KRW"
-timeframe = TimeFrame.MINUTE_3
+ticker = "BCH/KRW"
+timeframe = TimeFrame.MINUTE_15
 
 _, data = utils.get_data(ticker, timeframe, 5, 8, 13)
 data = data.rename(columns={
@@ -60,12 +64,20 @@ data = data.rename(columns={
     "close": "Close",
     "volume": "Volume"
 })
+unique_days = sorted(data.index.normalize().unique())
+
+if len(unique_days) < 2:
+    raise ValueError("데이터에 2일치 이상의 데이터가 필요합니다.")
+
+two_days = unique_days[-1:]
+
+data_two_days = data[data.index.normalize().isin(two_days)]
 
 bt = Backtest(
-    data=data[:-50],
+    data=data_two_days,
     strategy=MyStrategy,
     cash=1000000000000,
-    # commission=0.0004,
+    commission=0.0004,
 )
 #  0.001   0.1
 #  0.0004  0.04

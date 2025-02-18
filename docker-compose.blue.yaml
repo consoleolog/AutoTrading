@@ -13,5 +13,3 @@ services:
     expose:
       - "3000"
     command: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "3000"]
-    volumes:
-      - ./info.plk:/app/info.plk
