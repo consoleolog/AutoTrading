@@ -4,7 +4,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from constant.timeframe import TimeFrame
 from trading_service import ITradingService
 
-
 class ISchedulerConfig(abc.ABC):
     @abc.abstractmethod
     def start_scheduler(self):
@@ -19,9 +18,9 @@ class SchedulerConfig(ISchedulerConfig):
         self._scheduler.add_job(
             func=trading_service.start_trading,
             trigger='interval',
-            minutes=TimeFrame.KEYS[TimeFrame.MINUTE_3],
+            minutes=TimeFrame.KEYS[TimeFrame.MINUTE],
             kwargs={
-              "timeframe": TimeFrame.MINUTE_3,
+              "timeframe": TimeFrame.MINUTE_15,
             },
             id=str(uuid.uuid4())
         )

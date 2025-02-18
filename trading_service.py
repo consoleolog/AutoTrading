@@ -84,7 +84,7 @@ class TradingService(ITradingService):
         order_history = self.order_repository.find_by_ticker(candle.ticker)
         curr_price = candle.close
         buy_price = float(order_history["close"].iloc[-1])
-        return (curr_price - buy_price) / buy_price * 100.0
+        return (curr_price - buy_price) / (buy_price * 100.0)
 
     def start_trading(self, timeframe: TimeFrame):
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -99,7 +99,11 @@ class TradingService(ITradingService):
         rsi = data[RSI.LONG].iloc[-1]
         if balance == 0:
             bullish = data[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any()
-            if bullish and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
+            peekout = all([
+                data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
+                data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
+            ])
+            if peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
                 candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],
                                    timeframe)
                 res = exchange.create_buy_order(ticker, self.price_keys[ticker])
