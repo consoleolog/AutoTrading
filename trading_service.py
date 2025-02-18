@@ -100,6 +100,8 @@ class TradingService(ITradingService):
         if balance == 0:
             bullish = data[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any()
             peekout = all([
+                data[MACD.SHORT_HIST].iloc[-1] <= 0,
+                data[MACD.LONG_HIST].iloc[-1] <= 0,
                 data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
                 data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
             ])
