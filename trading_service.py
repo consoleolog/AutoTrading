@@ -1,37 +1,18 @@
 # -*- coding: utf-8 -*-
 import abc
-import os
-import uuid
-import pickle
-
-import ccxt
-
 import exchange
 import utils
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from dto.macd import MACD
-from dto.stochastic import Stochastic
 from logger import LoggerFactory
 from constant.stage import Stage
 from constant.timeframe import TimeFrame
 from dto.rsi import RSI
-from entity.candle import Candle
-from entity.candle_ema import CandleEMA
-from entity.candle_macd import CandleMACD
-from entity.order import Order
-from repository.candle_repository import ICandleRepository
 from repository.order_repository import IOrderRepository
 
 class ITradingService(abc.ABC):
     @abc.abstractmethod
-    def save_candle_data(self, ticker , timeframe: TimeFrame, data, stage: Stage)->Candle:
-        pass
-    @abc.abstractmethod
-    def save_order_history(self, candle, response)->Order:
-        pass
-    @abc.abstractmethod
-    def calculate_profit(self, candle: Candle):
+    def calculate_profit(self, ticker:str):
         pass
     @abc.abstractmethod
     def start_trading(self, timeframe: TimeFrame):
@@ -44,7 +25,6 @@ class TradingService(ITradingService):
     def __init__(
             self,
             ticker_list,
-            candle_repository: ICandleRepository,
             order_repository: IOrderRepository,
     ):
         self.logger = LoggerFactory.get_logger(__class__.__name__, "AutoTrading")
@@ -58,32 +38,12 @@ class TradingService(ITradingService):
             "SOL/KRW": 0.04,
             "ENS/KRW": 0.5,
         }
-        self.candle_repository = candle_repository
         self.order_repository = order_repository
 
-    def save_candle_data(self, ticker , timeframe: TimeFrame, data, stage: Stage)->Candle:
-        try:
-            candle = self.candle_repository.save_candle(
-                Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1], timeframe))
-            candle_ema = self.candle_repository.save_candle_ema(CandleEMA.of(candle.candle_id, stage, data))
-            self.candle_repository.save_candle_macd(CandleMACD.of(candle_ema.candle_id, data))
-            return candle
-        except Exception as e:
-            self.logger.warning(e.__traceback__)
-            pass
-    def save_order_history(self, candle, response)-> Order:
-        try:
-            order = Order.of(candle, response, datetime.now())
-            self.order_repository.save(order)
-            return order
-        except Exception as e:
-            self.logger.warning(e.__traceback__)
-            pass
-
-    def calculate_profit(self, candle: Candle):
-        order_history = self.order_repository.find_by_ticker(candle.ticker)
-        curr_price = candle.close
-        buy_price = float(order_history["close"].iloc[-1])
+    def calculate_profit(self, ticker):
+        orders = self.order_repository.find_by_ticker(ticker)
+        buy_price = float(orders.iloc[-1]["price"])
+        curr_price = exchange.get_current_price(ticker)
         return ((curr_price - buy_price) / buy_price) * 100.0
 
     def start_trading(self, timeframe: TimeFrame):
@@ -105,21 +65,15 @@ class TradingService(ITradingService):
                 data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
                 data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
             ])
-            if peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
-                candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],
-                                   timeframe)
-                res = exchange.create_buy_order(ticker, self.price_keys[ticker])
-                order = Order.of(candle, res, datetime.now())
-                self.order_repository.save(order)
+            if peekout and rsi <= 45 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
+                exchange.create_buy_order(ticker, self.price_keys[ticker])
+                self.order_repository.save(ticker, exchange.get_current_price(ticker), "bid")
             info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
         else:
-            candle = Candle.of(str(uuid.uuid4()), datetime.now(), ticker, data["close"].iloc[-1],timeframe)
-            profit = self.calculate_profit(candle)
+            profit = self.calculate_profit(ticker)
             if profit > 0.1:
-                res = exchange.create_sell_order(ticker, balance)
-                order = Order.of(candle, res, datetime.now())
-                self.order_repository.save(order)
+                exchange.create_sell_order(ticker, balance)
+                self.order_repository.save(ticker, exchange.get_current_price(ticker), "ask")
             info["profit"] = f"[Profit: {profit}]"
-
         info["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
         return info

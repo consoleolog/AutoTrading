@@ -3,7 +3,6 @@ import psycopg2
 from typing import Any, Type, TypeVar
 from sqlalchemy import create_engine
 from scheduler import SchedulerConfig
-from repository.candle_repository import ICandleRepository, CandleRepository
 from repository.order_repository import IOrderRepository, OrderRepository
 from trading_service import TradingService
 from trading_service import ITradingService
@@ -54,7 +53,6 @@ class IocContainer:
         )
         db_url = f"postgresql://{database.user}:{database.password}@{database.host}:{database.port}/{database.database}"
         engine = create_engine(db_url)
-        self.register(CandleRepository(connection, engine))
         self.register(OrderRepository(connection, engine))
-        self.register(TradingService(self.ticker_list, self.get(ICandleRepository), self.get(IOrderRepository)))
+        self.register(TradingService(self.ticker_list, self.get(IOrderRepository)))
         self.register(SchedulerConfig(self.get(ITradingService)))

@@ -2,20 +2,13 @@ import abc
 import pandas as pd
 import psycopg2
 from logger import LoggerFactory
-from entity.order import Order
 
 class IOrderRepository(abc.ABC):
-    @abc.abstractmethod
-    def find_all(self):
-        pass
     @abc.abstractmethod
     def find_by_ticker(self, ticker: str):
         pass
     @abc.abstractmethod
-    def find_by_ticker_and_timeframe(self, ticker, timeframe):
-        pass
-    @abc.abstractmethod
-    def save(self, order: Order)->Order:
+    def save(self, ticker, price, side):
         pass
 
 class OrderRepository(IOrderRepository):
@@ -24,77 +17,37 @@ class OrderRepository(IOrderRepository):
         self.logger = LoggerFactory.get_logger(__class__.__name__, "AutoTrading")
         self.engine = engine
 
-    def find_all(self):
-        sql = """SELECT O.ORDER_ID, 
-                        O.CANDLE_ID,
-                        O.TICKER,
-                        O.CLOSE,
-                        O.MODE,
-                        O.CREATED_AT 
-                 FROM ORDER_HISTORY AS O
-                 ORDER BY O.CREATED_AT DESC"""
-        return pd.read_sql(sql, self.engine)
-
     def find_by_ticker(self, ticker:str):
-        sql = """SELECT O.ORDER_ID, 
-                        O.CANDLE_ID,
-                        O.TICKER,
-                        O.CLOSE,
-                        O.MODE,
-                        O.CREATED_AT 
-                 FROM ORDER_HISTORY AS O
-                 WHERE O.TICKER = %(ticker)s
-                 ORDER BY O.CREATED_AT DESC
-                 LIMIT 1
-                 """
+        sql = """
+        SELECT O.ORDER_ID,
+               O.TICKER,
+               O.PRICE,
+               O.SIDE,
+               O.CREATED_AT
+        FROM BITHUMB_ORDER AS O
+        WHERE O.TICKER = %(ticker)s
+        AND O.SIDE = 'bid'
+        ORDER BY O.CREATED_AT DESC
+        LIMIT 1;
+        """
         params = {"ticker": ticker}
         return pd.read_sql(sql, self.engine, params=params)
 
-    def find_by_ticker_and_timeframe(self, ticker, timeframe):
-        sql = """SELECT O.ORDER_ID, 
-                        O.CANDLE_ID,
-                        O.TICKER,
-                        O.CLOSE,
-                        O.MODE,
-                        O.CREATED_AT 
-                 FROM ORDER_HISTORY AS O
-                 WHERE O.TICKER = %(ticker)s
-                 AND O.TIMEFRAME = %(timeframe)s
-                 ORDER BY O.CREATED_AT DESC
-                 LIMIT 1
-                 """
-        params = {"ticker": ticker, "timeframe": timeframe}
-        return pd.read_sql(sql, self.engine, params=params)
-
-    def save(self, order: Order):
+    def save(self, ticker, price, side):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute("""
-                INSERT INTO ORDER_HISTORY( 
-                    ORDER_ID,
-                    CANDLE_ID,
+                INSERT INTO BITHUMB_ORDER( 
                     TICKER,
-                    CLOSE,
-                    MODE,
-                    CREATED_AT
+                    PRICE,
+                    SIDE
                 ) VALUES (
-                    %s,
-                    %s,
-                    %s,
                     %s,
                     %s,
                     %s
                 )
-                """, (
-                    order.order_id,
-                    order.candle_id,
-                    order.ticker,
-                    order.close,
-                    order.mode,
-                    order.created_at
-                ))
+                """, (ticker, price, side))
                 self.connection.commit()
-                return order
         except psycopg2.Error as e:
             self.logger.error(e)
             self.connection.rollback()
