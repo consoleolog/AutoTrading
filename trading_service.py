@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import abc
-import time 
 import exchange
 import utils
 from concurrent.futures import ThreadPoolExecutor
@@ -41,15 +40,11 @@ class TradingService(ITradingService):
         }
         self.order_repository = order_repository
 
-    def calculate_profit(self, ticker, samples=3, delay=0.1):
+    def calculate_profit(self, ticker):
         orders = self.order_repository.find_by_ticker(ticker)
         buy_price = float(orders.iloc[-1]["price"])
-        prices = []
-        for _ in range(samples):
-            prices.append(exchange.get_current_price(ticker))
-            time.sleep(delay)
-        avg_price = sum(prices) / len(prices)
-        return ((avg_price - buy_price) / buy_price) * 100.0
+        curr_price = exchange.get_current_price(ticker)
+        return ((curr_price - buy_price) / buy_price) * 100.0
 
     def start_trading(self, timeframe: TimeFrame):
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -70,7 +65,7 @@ class TradingService(ITradingService):
                 data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
                 data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
             ])
-            if peekout and rsi <= 45 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
+            if peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
                 exchange.create_buy_order(ticker, self.price_keys[ticker])
                 self.order_repository.save(ticker, exchange.get_current_price(ticker), "bid")
             info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
