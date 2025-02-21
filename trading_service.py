@@ -33,10 +33,10 @@ class TradingService(ITradingService):
         self.price_keys = {
             "BTC/KRW": 0.0002,
             "ETH/KRW": 0.0090,
-            "BCH/KRW": 0.022,
+            "BCH/KRW": 0.044,
             "AAVE/KRW": 0.030,
-            "SOL/KRW": 0.04,
-            "ENS/KRW": 0.5,
+            "SOL/KRW": 0.08,
+            "ENS/KRW": 1,
         }
         self.order_repository = order_repository
 
