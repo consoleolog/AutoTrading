@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import abc
+import time 
 import exchange
 import utils
 from concurrent.futures import ThreadPoolExecutor
@@ -40,11 +41,15 @@ class TradingService(ITradingService):
         }
         self.order_repository = order_repository
 
-    def calculate_profit(self, ticker):
+    def calculate_profit(self, ticker, samples=3, delay=0.1):
         orders = self.order_repository.find_by_ticker(ticker)
         buy_price = float(orders.iloc[-1]["price"])
-        curr_price = exchange.get_current_price(ticker)
-        return ((curr_price - buy_price) / buy_price) * 100.0
+        prices = []
+        for _ in range(samples):
+            prices.append(exchange.get_current_price(ticker))
+            time.sleep(delay)
+        avg_price = sum(prices) / len(prices)
+        return ((avg_price - buy_price) / buy_price) * 100.0
 
     def start_trading(self, timeframe: TimeFrame):
         with ThreadPoolExecutor(max_workers=4) as executor:
