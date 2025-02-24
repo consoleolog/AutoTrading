@@ -63,7 +63,7 @@ class TradingService(ITradingService):
                 data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
                 data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
             ])
-            if bullish and peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
+            if bullish and peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
                 exchange.create_buy_order(ticker, self.price_keys[ticker])
                 self.order_repository.save(ticker, exchange.get_current_price(ticker), "bid")
             info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
