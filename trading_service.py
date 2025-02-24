@@ -58,14 +58,12 @@ class TradingService(ITradingService):
         balance = exchange.get_balance(ticker)
         rsi = data[RSI.LONG].iloc[-1]
         if balance == 0:
-            bullish = data[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any()
+            bullish = data[MACD.SHORT_BULLISH].iloc[-2:].isin([True]).any() or data[MACD.LONG_BULLISH].iloc[-2:].isin([True]).any()
             peekout = all([
-                data[MACD.SHORT_HIST].iloc[-1] <= 0,
-                data[MACD.LONG_HIST].iloc[-1] <= 0,
                 data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
                 data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
             ])
-            if peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
+            if bullish and peekout and rsi <= 40 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.STABLE_INCREASE]:
                 exchange.create_buy_order(ticker, self.price_keys[ticker])
                 self.order_repository.save(ticker, exchange.get_current_price(ticker), "bid")
             info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
