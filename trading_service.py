@@ -71,7 +71,7 @@ class TradingService(ITradingService):
             info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
         else:
             profit = self.calculate_profit(ticker)
-            if profit > 0.1:
+            if profit > 0.1 and stage in [Stage.STABLE_INCREASE, Stage.END_OF_INCREASE, Stage.START_OF_INCREASE]:
                 exchange.create_sell_order(ticker, balance)
                 self.order_repository.save(ticker, exchange.get_current_price(ticker), "ask")
             info["profit"] = f"[Profit: {profit}]"
