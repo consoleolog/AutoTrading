@@ -4,6 +4,7 @@ import exchange
 import utils
 from concurrent.futures import ThreadPoolExecutor
 from dto.macd import MACD
+from dto.stochastic import Stochastic
 from logger import LoggerFactory
 from constant.stage import Stage
 from constant.timeframe import TimeFrame
@@ -83,8 +84,13 @@ class TradingService(ITradingService):
             exchange.create_buy_order(ticker, self.price_keys[ticker])
         info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
         if balance != 0:
+            stoch_bearish = data[Stochastic.BEARISH].iloc[-2:].isin([True]).any()
             profit = self.calculate_profit(ticker)
-            if profit > 0.1 and stage in [Stage.STABLE_INCREASE, Stage.END_OF_INCREASE, Stage.START_OF_DECREASE]:
+            if profit < 0 and stoch_bearish and stage == Stage.STABLE_INCREASE:
+                exchange.create_sell_order(ticker, balance)
+                self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
+
+            if profit > 0.1 and stoch_bearish and stage in [Stage.STABLE_INCREASE, Stage.END_OF_INCREASE, Stage.START_OF_DECREASE]:
                 exchange.create_sell_order(ticker, balance)
                 self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
             info["profit"] = f"[Profit: {profit}]"
