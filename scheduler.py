@@ -26,4 +26,5 @@ class SchedulerConfig(ISchedulerConfig):
         )
 
     def start_scheduler(self):
+        self.trading_service.init_status()
         return self._scheduler.start()
