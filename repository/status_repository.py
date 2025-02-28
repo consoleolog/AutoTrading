@@ -40,11 +40,11 @@ class StatusRepository(IStatusRepository):
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    UPDATE UPBIT_STATUS 
+                    UPDATE BITHUMB_STATUS 
                     SET PRICE = %s,
                         SIDE = %s,
                         UPDATED_AT = NOW()
-                    WHERE UPBIT_STATUS.TICKER = %s
+                    WHERE BITHUMB_STATUS.TICKER = %s
                     """, (price, side, ticker)
                 )
                 self.connection.commit()
