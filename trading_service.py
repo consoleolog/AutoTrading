@@ -88,9 +88,8 @@ class TradingService(ITradingService):
             profit = self.calculate_profit(ticker)
             stoch_bearish = data[Stochastic.BEARISH].iloc[-2:].isin([True]).any()
             macd_bearish = data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any() or data[MACD.SHORT_BEARISH].iloc[-2:].isin([True]).any()
-            rsi_bearish = data[RSI.LONG_BEARISH].iloc[-2:].isin([True]).any()
             info["profit"] = f"[Profit: {profit}]"
-            if profit < 0 and (stoch_bearish or macd_bearish or rsi_bearish) and stage == Stage.STABLE_INCREASE:
+            if profit < 0 and (stoch_bearish or macd_bearish) and stage == Stage.STABLE_INCREASE:
                 exchange.create_sell_order(ticker, balance)
                 self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
                 return info
@@ -98,7 +97,7 @@ class TradingService(ITradingService):
                 exchange.create_sell_order(ticker, balance)
                 self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
                 return info
-            if profit > 0.1 and (stoch_bearish or macd_bearish or rsi_bearish):
+            if profit > 0.1 and (stoch_bearish or macd_bearish):
                 exchange.create_sell_order(ticker, balance)
                 self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
                 return info
