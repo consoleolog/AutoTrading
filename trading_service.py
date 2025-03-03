@@ -79,20 +79,27 @@ class TradingService(ITradingService):
             data[MACD.SHORT_HIST].iloc[-1] > data[MACD.SHORT_HIST].iloc[-7:].min(),
             data[MACD.LONG_HIST].iloc[-1] > data[MACD.LONG_HIST].iloc[-7:].min(),
         ])
+        info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
         if bullish and peekout and rsi <= 40 and exchange.get_krw() > 40000 and stage in [Stage.STABLE_DECREASE, Stage.END_OF_DECREASE, Stage.START_OF_INCREASE]:
             self.update_status(ticker)
             exchange.create_buy_order(ticker, self.price_keys[ticker])
-        info["data"] = f"[MACD: {bullish} | RSI: {rsi}]"
+            return info
         if balance != 0:
-            stoch_bearish = data[Stochastic.BEARISH].iloc[-2:].isin([True]).any()
             profit = self.calculate_profit(ticker)
-            if profit < 0 and stoch_bearish and stage == Stage.STABLE_INCREASE:
+            stoch_bearish = data[Stochastic.BEARISH].iloc[-2:].isin([True]).any()
+            macd_bearish = data[MACD.LONG_BEARISH].iloc[-2:].isin([True]).any() or data[MACD.SHORT_BEARISH].iloc[-2:].isin([True]).any()
+            rsi_bearish = data[RSI.LONG_BEARISH].iloc[-2:].isin([True]).any()
+            info["profit"] = f"[Profit: {profit}]"
+            if profit < 0 and (stoch_bearish or macd_bearish or rsi_bearish) and stage == Stage.STABLE_INCREASE:
                 exchange.create_sell_order(ticker, balance)
                 self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
-
+                return info
             if profit > 0.1 and stoch_bearish and stage in [Stage.STABLE_INCREASE, Stage.END_OF_INCREASE, Stage.START_OF_DECREASE]:
                 exchange.create_sell_order(ticker, balance)
                 self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
-            info["profit"] = f"[Profit: {profit}]"
-        info["info"] = f"[Ticker: {ticker} | Stage: {stage}]"
+                return info
+            if profit > 0.1 and (stoch_bearish or macd_bearish or rsi_bearish):
+                exchange.create_sell_order(ticker, balance)
+                self.status_repository.update_one(ticker, exchange.get_current_price(ticker), "ask")
+                return info
         return info
