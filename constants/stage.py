@@ -1,4 +1,4 @@
-class Stage:
+class STAGE:
     STABLE_INCREASE = 1
     END_OF_INCREASE = 2
     START_OF_DECREASE = 3
