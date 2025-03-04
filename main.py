@@ -38,9 +38,9 @@ def update_stochastic(ticker, k_slow, d_slow):
     30 아래로 내려가면 모든 신호 초기화
     """
     if k_slow.iloc[-1] > 70 and d_slow.iloc[-1] > 70:
-        ticker_position_mapper.update_stochastic(ticker, True)
-    if k_slow.iloc[-1] < 30 and d_slow.iloc[-1] < 30:
         ticker_position_mapper.refresh(ticker)
+    if k_slow.iloc[-1] < 30 and d_slow.iloc[-1] < 30:
+        ticker_position_mapper.update_stochastic(ticker, True)
 
 
 def update_macd(ticker, golden_cross, dead_cross):
